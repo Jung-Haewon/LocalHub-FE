@@ -5,7 +5,6 @@
 
     <div class="quick-create">
       <input v-model="quick.title" placeholder="제목" />
-      <input v-model="quick.region" placeholder="권역" />
       <input v-model="quick.excerpt" placeholder="간단 내용" />
       <button class="new-post" @click="createQuick">빠른 작성</button>
       <button class="new-post" @click="createPost">전체 작성 화면</button>
@@ -66,7 +65,7 @@ function openPost(id) { router.push({ path: `/posts/${id}` }) }
 function createQuick() {
   const title = quick.title && quick.title.trim()
   if (!title) return alert('제목을 입력하세요')
-  const newPost = { id: Date.now(), title, region: quick.region || '미정', excerpt: quick.excerpt || '' }
+  const newPost = { id: Date.now(), title, excerpt: quick.excerpt || '' }
   const raw = localStorage.getItem('localhub_posts')
   const arr = raw ? JSON.parse(raw) : []
   arr.unshift(newPost)
@@ -75,7 +74,7 @@ function createQuick() {
   quick.title = quick.region = quick.excerpt = ''
 }
 
-const quick = ref({ title: '', region: '', excerpt: '' })
+const quick = ref({ title: '', excerpt: '' })
 
 function createPost() { router.push({ path: '/posts/new' }) }
 </script>

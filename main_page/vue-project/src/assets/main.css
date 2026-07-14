@@ -1,5 +1,14 @@
 @import './base.css';
 
+:root {
+  --bg: #0b1220;
+  --panel: #0f1724;
+  --muted: #98a0b3;
+  --text: #e6eef8;
+  --border: #223142;
+  --accent: #3b82f6;
+}
+
 #app {
   max-width: 1280px;
   margin: 0 auto;

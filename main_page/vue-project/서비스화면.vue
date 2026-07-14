@@ -2,7 +2,7 @@
   <div class="home-view">
     <section class="banner">
       <h1>지역 정보 공유 커뮤니티 LocalHub</h1>
-      <p>선정 권역의 알짜배기 지역 정보를 한눈에 만나보세요.</p>
+      <p>서울의 알짜배기 지역 정보를 한눈에 만나보세요.</p>
 
       <div class="search-row">
         <input v-model="q" placeholder="지역/키워드 검색" @keyup.enter="onSearch" />
@@ -133,7 +133,8 @@ function openMapModal() {
 }
 
 function goPosts() {
-  if (router) router.push({ path: '/posts' })
+  // Open posts popup page in a new browser tab/window
+  window.open('/posts-popup.html', '_blank')
 }
 
 function onChatOpen() {
