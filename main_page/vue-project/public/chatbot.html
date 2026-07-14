@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LocalHub Chat (팝업)</title>
+  <style>
+    :root{--bg:#0b1220;--panel:#0f1724;--text:#e6eef8;--muted:#98a0b3;--accent:#3b82f6;--border:#223142}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:420px;margin:18px auto;padding:12px;background:var(--panel);border:1px solid var(--border);border-radius:8px}
+    header{display:flex;justify-content:space-between;align-items:center}
+    .messages{height:480px;overflow:auto;padding:12px;background:rgba(255,255,255,0.01);border-radius:6px;margin-top:12px}
+    .msg{padding:8px 10px;border-radius:8px;margin-bottom:8px}
+    .msg.user{background:#11324a;text-align:right}
+    .msg.bot{background:#14232f}
+    .composer{display:flex;gap:8px;margin-top:12px}
+    .composer input{flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text)}
+    .composer button{padding:8px 12px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h3>LocalHub Chat</h3>
+      <small class="hint">(백엔드 연동 대기 중)</small>
+    </header>
+
+    <div id="messages" class="messages">
+      <div class="msg bot">안녕하세요 — 지역 정보를 도와드려요.</div>
+    </div>
+
+    <div class="composer">
+      <input id="input" placeholder="질문을 입력하세요" />
+      <button id="send">전송</button>
+    </div>
+
+    <div class="hint">이 창은 백엔드 챗봇 API가 제공되면 fetch로 바로 연동됩니다. 현재는 로컬 에코 동작만 수행합니다.</div>
+  </div>
+
+  <script>
+    const messages = document.getElementById('messages')
+    const input = document.getElementById('input')
+    const send = document.getElementById('send')
+
+    function append(kind, text){
+      const el = document.createElement('div')
+      el.className = 'msg ' + kind
+      el.textContent = text
+      messages.appendChild(el)
+      messages.scrollTop = messages.scrollHeight
+    }
+
+    async function sendMessage(){
+      const text = input.value.trim()
+      if(!text) return
+      append('user', text)
+      input.value = ''
+
+      // Placeholder: here BE API will be called by backend dev.
+      // Example (to be replaced by BE endpoint):
+      // const res = await fetch('/api/chat', { method:'POST', body: JSON.stringify({q:text}) })
+      // const data = await res.json(); append('bot', data.answer)
+
+      // Local echo for now
+      setTimeout(()=> append('bot', '응답 예시: '+text), 400)
+    }
+
+    send.addEventListener('click', sendMessage)
+    input.addEventListener('keyup', e=> { if(e.key==='Enter') sendMessage() })
+  </script>
+</body>
+</html>

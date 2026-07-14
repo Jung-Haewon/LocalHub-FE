@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>게시글 목록 - LocalHub (팝업)</title>
+  <style>
+    :root{--bg:#0b1220;--panel:#0f1724;--text:#e6eef8;--muted:#98a0b3;--border:#223142}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .wrap{max-width:980px;margin:18px auto;padding:18px;background:var(--panel);border:1px solid var(--border);border-radius:8px}
+    h1{margin:0 0 12px 0}
+    .list{margin-top:12px;display:grid;gap:10px}
+    .card{padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+    .meta{color:var(--muted);font-size:13px;margin-top:6px}
+    .actions{margin-top:12px}
+    .btn{padding:8px 12px;border-radius:6px;border:1px solid #3b82f6;background:transparent;color:#3b82f6;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>게시글 목록 (팝업)</h1>
+    <p>이 창은 커뮤니티 게시글 목록을 별도 팝업으로 표시합니다. 게시글은 로컬 스토리지(localhub_posts)에 저장됩니다.</p>
+    <div class="actions">
+      <button class="btn" id="btn-refresh">새로고침</button>
+      <button class="btn" id="btn-new">새 글쓰기</button>
+      <button class="btn" id="btn-back">메인으로 돌아가기</button>
+    </div>
+    <div id="list" class="list"></div>
+    <div id="form-wrap" style="display:none;margin-top:12px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input id="f-title" placeholder="제목" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text)" />
+        <textarea id="f-content" rows="6" placeholder="내용" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text)"></textarea>
+        <input id="f-password" placeholder="비밀번호 (수정/삭제 시 사용)" style="padding:8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text)" />
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="btn-save">저장</button>
+          <button class="btn" id="btn-cancel">취소</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let editingId = null
+
+      function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])) }
+
+      function render() {
+        const raw = localStorage.getItem('localhub_posts')
+        let arr = []
+        try { arr = raw ? JSON.parse(raw) : [] } catch(e) { arr = [] }
+        const list = document.getElementById('list')
+        list.innerHTML = ''
+        if (!arr.length) {
+          list.innerHTML = '<div class="card">게시물이 없습니다.</div>'
+          return
+        }
+        arr.forEach(p => {
+          const el = document.createElement('div')
+          el.className = 'card'
+          const title = document.createElement('strong')
+          title.textContent = p.title
+          const meta = document.createElement('div')
+          meta.className = 'meta'
+          meta.textContent = `ID: ${p.id}`
+          const excerpt = document.createElement('p')
+          excerpt.innerHTML = escapeHtml(p.excerpt||p.content||'')
+
+          const controls = document.createElement('div')
+          controls.style.marginTop = '8px'
+
+          const btnEdit = document.createElement('button')
+          btnEdit.className = 'btn'
+          btnEdit.textContent = '수정'
+          btnEdit.addEventListener('click', (ev) => {
+            ev.stopPropagation()
+            const pwd = prompt('게시글 비밀번호를 입력하세요 (수정용)')
+            if (String(p.password || '') !== String(pwd)) { alert('비밀번호가 일치하지 않습니다.'); return }
+            editingId = p.id
+            document.getElementById('f-title').value = p.title || ''
+            document.getElementById('f-content').value = p.content || p.excerpt || ''
+            document.getElementById('f-password').value = ''
+            document.getElementById('form-wrap').style.display = 'block'
+          })
+
+          const btnDelete = document.createElement('button')
+          btnDelete.className = 'btn'
+          btnDelete.style.marginLeft = '8px'
+          btnDelete.textContent = '삭제'
+          btnDelete.addEventListener('click', (ev) => {
+            ev.stopPropagation()
+            const pwd = prompt('게시글 비밀번호를 입력하세요 (삭제용)')
+            if (String(p.password || '') !== String(pwd)) { alert('비밀번호가 일치하지 않습니다.'); return }
+            if (!confirm('정말 삭제하시겠습니까?')) return
+            const raw2 = localStorage.getItem('localhub_posts')
+            const arr2 = raw2 ? JSON.parse(raw2) : []
+            const filtered = arr2.filter(x => String(x.id) !== String(p.id))
+            localStorage.setItem('localhub_posts', JSON.stringify(filtered))
+            render()
+          })
+
+          // open detail on card click
+          el.addEventListener('click', () => {
+            const url = '/posts/' + encodeURIComponent(p.id)
+            window.open(url, '_blank')
+          })
+
+          controls.appendChild(btnEdit)
+          controls.appendChild(btnDelete)
+          el.appendChild(title)
+          el.appendChild(meta)
+          el.appendChild(excerpt)
+          el.appendChild(controls)
+          list.appendChild(el)
+        })
+      }
+
+      document.getElementById('btn-refresh').addEventListener('click', render)
+      document.getElementById('btn-new').addEventListener('click', () => {
+        editingId = null
+        document.getElementById('f-title').value = ''
+        document.getElementById('f-content').value = ''
+        document.getElementById('f-password').value = ''
+        document.getElementById('form-wrap').style.display = 'block'
+      })
+      document.getElementById('btn-cancel').addEventListener('click', () => {
+        editingId = null
+        document.getElementById('form-wrap').style.display = 'none'
+      })
+
+      document.getElementById('btn-save').addEventListener('click', () => {
+        const titleEl = document.getElementById('f-title')
+        const contentEl = document.getElementById('f-content')
+        const pwdEl = document.getElementById('f-password')
+        if (!titleEl || !contentEl || !pwdEl) return
+        const title = titleEl.value.trim()
+        if (!title) return alert('제목을 입력하세요')
+        const content = contentEl.value.trim()
+        const pwd = pwdEl.value
+        if (!pwd) return alert('비밀번호를 입력하세요')
+        const raw = localStorage.getItem('localhub_posts')
+        const arr = raw ? JSON.parse(raw) : []
+        if (editingId) {
+          const idx = arr.findIndex(x => String(x.id) === String(editingId))
+          if (idx >= 0) {
+            arr[idx] = { ...arr[idx], title, content, excerpt: content, password: pwd }
+          }
+          editingId = null
+        } else {
+          const newP = { id: Date.now(), title, content, excerpt: content, password: pwd }
+          arr.unshift(newP)
+        }
+        localStorage.setItem('localhub_posts', JSON.stringify(arr))
+        // refresh list first, then clear inputs
+        render()
+        titleEl.value = ''
+        contentEl.value = ''
+        pwdEl.value = ''
+        document.getElementById('form-wrap').style.display = 'none'
+      })
+
+      document.getElementById('btn-back').addEventListener('click', () => {
+        try {
+          if (window.opener && !window.opener.closed) {
+            try {
+              window.opener.location.href = '/'
+            } catch (e) {
+              // if cross-window navigation blocked, at least focus
+            }
+            try { window.opener.focus() } catch (e) {}
+            // close this popup
+            try { window.close() } catch (e) {}
+          } else {
+            // no opener - open main in a new tab then close
+            try { window.open('/', '_blank') } catch (e) {}
+            try { window.close() } catch (e) {}
+          }
+        } catch (e) {
+          try { window.open('/', '_blank') } catch (err) {}
+        }
+      })
+
+      render()
+    })
+  </script>
