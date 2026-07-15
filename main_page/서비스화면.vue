@@ -9,8 +9,12 @@
         <select v-model="filter">
           <option value="">전체</option>
           <option value="tour">관광지</option>
-          <option value="food">맛집</option>
-          <option value="event">축제·행사</option>
+          <option value="leports">레포츠</option>
+          <option value="culture">문화시설</option>
+          <option value="shopping">쇼핑</option>
+          <option value="lodging">숙박</option>
+          <option value="itinerary">여행코스</option>
+          <option value="festival">축제·공연·행사</option>
         </select>
         <button @click="onSearch">검색</button>
       </div>
@@ -18,8 +22,12 @@
 
     <section class="categories">
       <button @click="openCategory('tour')">관광지</button>
-      <button @click="openCategory('food')">맛집</button>
-      <button @click="openCategory('event')">축제·행사</button>
+      <button @click="openCategory('leports')">레포츠</button>
+      <button @click="openCategory('culture')">문화시설</button>
+      <button @click="openCategory('shopping')">쇼핑</button>
+      <button @click="openCategory('lodging')">숙박</button>
+      <button @click="openCategory('itinerary')">여행코스</button>
+      <button @click="openCategory('festival')">축제·공연·행사</button>
     </section>
 
     <section class="content-grid">
@@ -82,8 +90,12 @@ function mapCategoryLabel(cat) {
   if (!cat) return ''
   const c = String(cat).toLowerCase()
   if (c === 'tour') return '관광지'
-  if (c === 'food') return '맛집'
-  if (c === 'event') return '축제·행사'
+  if (c === 'leports') return '레포츠'
+  if (c === 'culture') return '문화시설'
+  if (c === 'shopping') return '쇼핑'
+  if (c === 'lodging') return '숙박'
+  if (c === 'itinerary') return '여행코스'
+  if (c === 'festival') return '축제·공연·행사'
   return cat
 }
 
@@ -209,10 +221,14 @@ function goCategory(cat) {
 }
 
 function openCategory(cat) {
-  // open a simple vanilla/static page per category in a new window
-  const map = { tour: '/category-tour.html', food: '/category-food.html', event: '/category-event.html' }
-  const url = map[cat] || '/category.html'
-  window.open(url, '_blank', 'noopener')
+  // navigate to the Category page with query parameter
+  if (router) {
+    router.push({ path: '/category', query: { category: cat } })
+  } else {
+    // fallback: open category listing page
+    const url = `/category?category=${encodeURIComponent(cat)}`
+    window.open(url, '_blank', 'noopener')
+  }
 }
 
 function openPost(id) {

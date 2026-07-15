@@ -18,12 +18,22 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const category = route.query.category || ''
-const categoryLabel = category === 'tour' ? '관광지' : category === 'food' ? '맛집' : category === 'event' ? '축제·행사' : '카테고리'
+const categoryLabel = (function(c){
+  const k = String(c || '').toLowerCase()
+  if (k === 'tour') return '관광지'
+  if (k === 'leports') return '레포츠'
+  if (k === 'culture') return '문화시설'
+  if (k === 'shopping') return '쇼핑'
+  if (k === 'lodging') return '숙박'
+  if (k === 'itinerary') return '여행코스'
+  if (k === 'festival') return '축제·공연·행사'
+  return '카테고리'
+})(category)
 
 const items = ref([])
 
 onMounted(async () => {
-  // BE에서 카테고리별 데이터를 가져오게 될 예정
+  // BE에서 카테고리별 데이터를 가져오게 될 예정 (카테고리: 관광지, 레포츠, 문화시설, 쇼핑, 숙박, 여행코스, 축제·공연·행사)
   items.value = [
     { id: 1, title: `${categoryLabel} 샘플 1`, summary: '샘플 요약' },
     { id: 2, title: `${categoryLabel} 샘플 2`, summary: '샘플 요약' }
