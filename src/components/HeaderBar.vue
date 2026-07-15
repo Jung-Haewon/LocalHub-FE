@@ -3,7 +3,6 @@
     <div class="container">
       <h3><router-link to="/">LocalHub</router-link></h3>
       <nav>
-        <router-link to="/map">지도</router-link>
         <router-link to="/posts">게시판</router-link>
       </nav>
     </div>

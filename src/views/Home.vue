@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import api from '../services/api'
 
 export default {
@@ -69,6 +69,20 @@ export default {
     onMounted(() => {
       fetchCategories()
       fetchRecent()
+      // if a map element exists on the page (rendered elsewhere), hide it on Home
+      const mapEl = document.getElementById('kakao-map')
+      if (mapEl) {
+        mapEl.dataset._home_was_hidden = mapEl.style.display || ''
+        mapEl.style.display = 'none'
+      }
+    })
+
+    onUnmounted(() => {
+      const mapEl = document.getElementById('kakao-map')
+      if (mapEl && mapEl.dataset._home_was_hidden !== undefined) {
+        mapEl.style.display = mapEl.dataset._home_was_hidden
+        delete mapEl.dataset._home_was_hidden
+      }
     })
 
     const recommendedOrder = [
