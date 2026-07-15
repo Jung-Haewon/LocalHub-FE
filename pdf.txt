@@ -1,0 +1,155 @@
+    
+
+2026. 7.
+
+:      (LocalHub)    
+
+I 
+ :  ·    :       :  (:   / : --)
+II  
+1.    . 2.   5 (, /, /, /, )   · JSON  ,      1         ·     ( 'LocalHub')  .       Vue.js, Python        FastAPI,  DB          SQLite   . ,  JSON           ( ·  )         .    API   ·,                  . 3.  ,      III            ,       .  2026 7 16()  3,     (IV  )     ,    SSAFY Git Lab  .       ,         .
+III   ()
+      .   ·  JSON          (  API  ) .  JSON     ,        (1~4)   ·      · 
+
+.   (·· )         
+ (CRUD)    .  ·    ,         .    ·     , ·         .      ·,      .  1    --  ,  , , ,  API(FastAPI REST)  Vue.js   .    DB     
+     . FastAPI POST /api/chat  (OpenAI API  ) --  JSON        .   (:   ,  ,  ,    , ...)    .  UI (:   ,  , ) 
+    .   Vue.js 3 , SPA  
+ (FastAPI + SQLite)   . FastAPI  REST API  , SQLAlchemy ORM  SQLite   (: posts, comments, locations, ... ) . API , DB ,         (.env)  ,   GitHub      . ( .env  .gitignore       )
+     .    -- Netlify .    -- Render .      URL     
+   AI   .     VSCode Copilot + OpenAI API Key   ,        . Claude Code, Codex, Cursor, Antigravity   AI    
+
+  ,        
+IV 
+[ 1]  ()
+
+ (2026.7.16.  15:00)     ,      .
+
+
+
+
+
+ 
+
+
+
+
+
+ (Vue.js) Git Repository URL
+
+.env    
+
+
+
+ (FastAPI)
+
+Git Repository URL
+
+.env    
+
+ SQLite DB  (.db)   
+
+  
+
+
+
+Netlify   URL
+
+   URL
+
+repo  
+
+
+
+Render   URL
+
+   URL
+
+repo  
+
+
+
+ 
+
+PDF  docx
+
+ ·  
+
+
+
+WBS
+
+  
+
+
+
+ PPT 
+
+PPT  PDF
+
+[ 2]   ()
+      () 
+            ,      ( 1)
+
+   
+
+ Leaflet.js  Kakao Maps  API  ·   
+
+ 
+                   
+
+    
+Chart.js  D3.js     ,     
+      (FullCalendar     )
+ ·      
+  API          
+WebSocket         
+i18n  /       
+KakaoTalk·        OG    
+ ,  , , ,  ,  
+
+                 .
+
+[ 3]    ()
+
+     · JSON  .        .
+
+
+
+  
+
+  
+
+ / / /
+
+, , ,   , , , 
+
+    ,   ,        ,   
+·  
+
+ 
+
+  
+
+  
+
+[ 4]  ()
+   ,     UI    .   ()
+
+   ,   ,         
+
+,  ,   ,  (FastAPI REST API )    
+
+· , /         · 
+··   , /    ()
+
+ ( )  () --    
+
+V    
+4.                ,         .           ,     ·      . 5.            ,            .                . 6.             .
+
+: . .
+
+     ()
+
+
