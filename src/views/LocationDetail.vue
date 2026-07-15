@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '../services/api'
 
@@ -25,51 +25,35 @@ export default {
   props: ['id'],
   setup (props) {
     const item = ref(null)
-    const list = ref([])
+    const prevId = ref(null)
+    const nextId = ref(null)
     const router = useRouter()
     const route = useRoute()
 
     const fetchItem = async () => {
       try {
-        const r = await api.get(`/locations/${props.id}`)
-        item.value = r.data
+        const params = {}
+        // 전달 가능한 쿼리만 복사
+        const allowed = ['category', 'q', 'lat', 'lon', 'radius', 'content_id']
+        allowed.forEach(k => {
+          if (route.query[k] !== undefined && route.query[k] !== null && route.query[k] !== '') {
+            params[k] = route.query[k]
+          }
+        })
+        const r = await api.get(`/locations/${props.id}`, { params })
+        item.value = r.data || null
+        prevId.value = (r.data && (r.data.prev_id ?? r.data.prevId)) || null
+        nextId.value = (r.data && (r.data.next_id ?? r.data.nextId)) || null
       } catch (e) {
         item.value = null
+        prevId.value = null
+        nextId.value = null
       }
     }
 
-    const fetchList = async () => {
-      try {
-        const params = {}
-        if (route.query.category) params.category = route.query.category
-        const r = await api.get('/locations', { params })
-        list.value = Array.isArray(r.data) ? r.data : []
-      } catch (e) {
-        list.value = []
-      }
-    }
-
-    onMounted(async () => {
-      await Promise.all([fetchItem(), fetchList()])
-    })
-
-    watch(() => props.id, async () => {
-      await fetchItem()
-    })
-
-    const currentIndex = computed(() => {
-      return list.value.findIndex(i => String(i.id) === String(props.id) || String(i.content_id) === String(props.id))
-    })
-
-    const prevId = computed(() => {
-      const idx = currentIndex.value
-      return idx > 0 ? (list.value[idx - 1].id || list.value[idx - 1].content_id) : null
-    })
-
-    const nextId = computed(() => {
-      const idx = currentIndex.value
-      return (idx >= 0 && idx < list.value.length - 1) ? (list.value[idx + 1].id || list.value[idx + 1].content_id) : null
-    })
+    onMounted(fetchItem)
+    watch(() => props.id, fetchItem)
+    watch(() => route.query, fetchItem, { deep: true })
 
     const goBack = () => router.back()
     const goToId = (id) => {
@@ -77,7 +61,7 @@ export default {
       router.push({ name: 'LocationDetail', params: { id } })
     }
 
-    return { item, goBack, prevId, nextId, goToId }
+    return { item, prevId, nextId, goBack, goToId }
   }
 }
 </script>
