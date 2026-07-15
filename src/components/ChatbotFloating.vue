@@ -39,6 +39,9 @@ async function send() {
   messages.value.push({ from: 'user', text: userText })
   input.value = ''
 
+  messages.value.push({ from: 'bot', text: '답변을 준비중입니다...' })
+  const loadingIndex = messages.value.length - 1
+
   try {
     // 백엔드로 POST 요청 전송
     const response = await fetch('http://127.0.0.1:8000/api/chat', { // 백엔드 주소 확인 필수!
@@ -56,7 +59,7 @@ async function send() {
 
     const data = await response.json()
     // 백엔드 응답(reply)을 챗봇 메시지에 추가
-    messages.value.push({ from: 'bot', text: data.reply })
+    messages.value[loadingIndex].text = data.reply
     
   } catch (error) {
     console.error('챗봇 에러:', error)
