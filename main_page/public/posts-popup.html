@@ -14,7 +14,6 @@
     .meta{color:var(--muted);font-size:13px;margin-top:6px}
     .actions{margin-top:12px}
     .btn{padding:8px 12px;border-radius:6px;border:1px solid #3b82f6;background:transparent;color:#3b82f6;cursor:pointer}
-    /* prevent long words from breaking layout and clamp excerpt to 3 lines */
     .card { overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
     .card p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; text-overflow: ellipsis; line-height: 1.25em; max-height: calc(1.25em * 3); word-break: break-word; overflow-wrap: anywhere; white-space: normal; }
   </style>
@@ -22,7 +21,7 @@
 <body>
   <div class="wrap">
     <h1>게시글 목록 (팝업)</h1>
-    <p>이 창은 커뮤니티 게시글 목록을 별도 팝업으로 표시합니다. 게시글은 로컬 스토리지(localhub_posts)에 저장됩니다.</p>
+    <p>이 창은 커뮤니티 게시글 목록을 별도 팝업으로 표시합니다.</p>
     <div class="actions">
       <button class="btn" id="btn-refresh">새로고침</button>
       <button class="btn" id="btn-new">새 글쓰기</button>
@@ -45,16 +44,43 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let editingId = null
+      const API_BASE = 'http://localhost:8000/api'
 
       function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])) }
 
-      function render() {
-        const raw = localStorage.getItem('localhub_posts')
-        let arr = []
-        try { arr = raw ? JSON.parse(raw) : [] } catch(e) { arr = [] }
+      async function fetchPostsFromServer() {
+        try {
+          console.log('[popup] Fetching posts from server')
+          const res = await fetch(`${API_BASE}/posts?category=&page=1&size=50`, { method: 'GET', headers: { 'Accept': 'application/json' } })
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+          const json = await res.json()
+          const items = json && json.items ? json.items : (Array.isArray(json) ? json : [])
+          // normalize fields to local shape
+          const normalized = items.map(it => ({
+            id: it.id,
+            title: it.title,
+            excerpt: it.excerpt || it.content || '',
+            content: it.content || it.excerpt || '',
+            password: it.password || '',
+            likes: it.likes || 0,
+            views: it.view_count ?? it.views ?? 0,
+          }))
+          // persist locally for popup usage
+          try { localStorage.setItem('localhub_posts', JSON.stringify(normalized)) } catch(e) {}
+          return normalized
+        } catch (err) {
+          console.error('[popup] fetchPostsFromServer error', err)
+          // fallback to localStorage
+          const raw = localStorage.getItem('localhub_posts')
+          try { return raw ? JSON.parse(raw) : [] } catch (e) { return [] }
+        }
+      }
+
+      async function render() {
+        const arr = await fetchPostsFromServer()
         const list = document.getElementById('list')
         list.innerHTML = ''
-        if (!arr.length) {
+        if (!arr || !arr.length) {
           list.innerHTML = '<div class="card">게시물이 없습니다.</div>'
           return
         }
@@ -68,20 +94,38 @@
           meta.textContent = `ID: ${p.id} · 조회수: ${p.views || 0}`
           const excerpt = document.createElement('p')
           excerpt.innerHTML = escapeHtml(p.excerpt||p.content||'')
-
-          // edit/delete handled in detail page now; no inline controls here
-
-          // open detail on card click
           el.addEventListener('click', () => {
             const url = '/posts/' + encodeURIComponent(p.id)
             window.open(url, '_blank')
           })
-
           el.appendChild(title)
           el.appendChild(meta)
           el.appendChild(excerpt)
           list.appendChild(el)
         })
+      }
+
+      async function createPostOnServer(payload) {
+        try {
+          console.log('[popup] createPostOnServer payload', payload)
+          const res = await fetch(`${API_BASE}/posts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+          console.log('[popup] createPost status', res.status, res.statusText)
+          if (!res.ok) {
+            const txt = await res.text()
+            console.error('[popup] createPost error body', txt)
+            throw new Error(txt || `${res.status}`)
+          }
+          const json = await res.json()
+          console.log('[popup] createPost response', json)
+          return json
+        } catch (err) {
+          console.error('[popup] createPostOnServer error', err)
+          throw err
+        }
       }
 
       document.getElementById('btn-refresh').addEventListener('click', render)
@@ -97,7 +141,7 @@
         document.getElementById('form-wrap').style.display = 'none'
       })
 
-        document.getElementById('btn-save').addEventListener('click', () => {
+      document.getElementById('btn-save').addEventListener('click', async () => {
         const titleEl = document.getElementById('f-title')
         const contentEl = document.getElementById('f-content')
         const pwdEl = document.getElementById('f-password')
@@ -107,25 +151,70 @@
         const content = contentEl.value.trim()
         const pwd = pwdEl.value
         if (!pwd) return alert('비밀번호를 입력하세요')
-        const raw = localStorage.getItem('localhub_posts')
-        const arr = raw ? JSON.parse(raw) : []
+
         if (editingId) {
-          const idx = arr.findIndex(x => String(x.id) === String(editingId))
-          if (idx >= 0) {
-            arr[idx] = { ...arr[idx], title, content, excerpt: content, password: pwd, likes: arr[idx].likes || 0, views: arr[idx].views || 0 }
+          // Update: attempt to PUT to server if API supports update, else fallback to localStorage
+          const payload = { title, content, password: pwd }
+          try {
+            console.log('[popup] updating post id', editingId, 'payload', payload)
+            const res = await fetch(`${API_BASE}/posts/${encodeURIComponent(editingId)}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify(payload)
+            })
+            if (!res.ok) {
+              const txt = await res.text()
+              console.error('[popup] update error body', txt)
+              throw new Error(txt || `${res.status}`)
+            }
+            const updated = await res.json()
+            console.log('[popup] update response', updated)
+            // update local list
+            const raw = localStorage.getItem('localhub_posts')
+            const arr = raw ? JSON.parse(raw) : []
+            const idx = arr.findIndex(x => String(x.id) === String(editingId))
+            if (idx >= 0) { arr[idx] = { ...arr[idx], title, content, excerpt: content } }
+            localStorage.setItem('localhub_posts', JSON.stringify(arr))
+            render()
+            titleEl.value = ''; contentEl.value = ''; pwdEl.value = ''; document.getElementById('form-wrap').style.display = 'none'
+            editingId = null
+            return
+          } catch (err) {
+            console.error('[popup] update failed, falling back to local update', err)
+            // fallthrough to local update below
           }
-          editingId = null
-        } else {
-          const newP = { id: Date.now(), title, content, excerpt: content, password: pwd, likes: 0, views: 0 }
-          arr.unshift(newP)
         }
-        localStorage.setItem('localhub_posts', JSON.stringify(arr))
-        // refresh list first, then clear inputs
-        render()
-        titleEl.value = ''
-        contentEl.value = ''
-        pwdEl.value = ''
-        document.getElementById('form-wrap').style.display = 'none'
+
+        // Create new post on server
+        const payload = {
+          category: '',
+          title,
+          content,
+          author_nickname: '익명',
+          password: pwd
+        }
+
+        try {
+          const created = await createPostOnServer(payload)
+          // server returns created object — normalize and save locally
+          const item = {
+            id: created.id,
+            title: created.title,
+            excerpt: created.excerpt || created.content || '',
+            content: created.content || created.excerpt || '',
+            password: created.password || '',
+            likes: created.likes || 0,
+            views: created.view_count ?? created.views ?? 0
+          }
+          const raw = localStorage.getItem('localhub_posts')
+          const arr = raw ? JSON.parse(raw) : []
+          arr.unshift(item)
+          localStorage.setItem('localhub_posts', JSON.stringify(arr))
+          render()
+          titleEl.value = ''; contentEl.value = ''; pwdEl.value = ''; document.getElementById('form-wrap').style.display = 'none'
+        } catch (err) {
+          alert('서버에 글 생성 요청 중 오류가 발생했습니다. 콘솔 로그를 확인하세요.')
+        }
       })
 
       document.getElementById('btn-back').addEventListener('click', () => {
@@ -133,14 +222,10 @@
           if (window.opener && !window.opener.closed) {
             try {
               window.opener.location.href = '/'
-            } catch (e) {
-              // if cross-window navigation blocked, at least focus
-            }
+            } catch (e) {}
             try { window.opener.focus() } catch (e) {}
-            // close this popup
             try { window.close() } catch (e) {}
           } else {
-            // no opener - open main in a new tab then close
             try { window.open('/', '_blank') } catch (e) {}
             try { window.close() } catch (e) {}
           }
@@ -152,3 +237,5 @@
       render()
     })
   </script>
+</body>
+</html>

@@ -28,18 +28,18 @@
         <p>사용자들이 작성하는 일반 게시글은 별도의 커뮤니티 게시판으로 분리됩니다.</p>
         <button @click="goPosts">커뮤니티 게시글 보기</button>
 
-              <div class="posts-preview">
-                <h3>추천 게시물</h3>
-                <div v-if="loading">로딩 중...</div>
-                <div v-else-if="recommendedPosts.length === 0">게시물이 없습니다.</div>
-                <ul class="post-list">
-                  <li v-for="p in recommendedPosts" :key="p.id" class="post-card" @click="openPost(p.id)">
-                    <h4>{{ p.title }}</h4>
-                    <p class="meta">{{ p.categoryLabel || '커뮤니티' }} · {{ p.region || '' }} · 조회수: {{ p.views || 0 }}</p>
-                    <p class="excerpt">{{ p.content ?? p.excerpt ?? '' }}</p>
-                  </li>
-                </ul>
-              </div>
+        <div class="posts-preview">
+          <h3>추천 게시물</h3>
+          <div v-if="loading">로딩 중...</div>
+          <div v-else-if="recommendedPosts.length === 0">게시물이 없습니다.</div>
+          <ul class="post-list">
+            <li v-for="p in recommendedPosts" :key="p.id" class="post-card" @click="openPost(p.id)">
+              <h4>{{ p.title }}</h4>
+              <p class="meta">{{ p.categoryLabel || '커뮤니티' }} · {{ p.region || '' }} · 조회수: {{ p.views || 0 }}</p>
+              <p class="excerpt">{{ p.content ?? p.excerpt ?? '' }}</p>
+            </li>
+          </ul>
+        </div>
       </div>
     </section>
 
@@ -49,8 +49,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineAsyncComponent, getCurrentInstance } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from './src/api' // API 헬퍼 사용
 
 let router
 try {
@@ -65,7 +66,6 @@ const posts = ref([])
 
 // Lazy-load chatbot widget component (실제 구현은 나중에 추가)
 const ChatbotWidget = defineAsyncComponent(() => import('./src/components/ChatbotWidget.vue').catch(() => ({
-  // 간단한 폴백 컴포넌트: 렌더 함수로 null 반환
   setup() { return () => null }
 })))
 
@@ -75,32 +75,76 @@ const sampleData = [
   { id: 1, title: '한적한 뷰 포인트', category: 'tour', categoryLabel: '관광지', region: 'A 권역', excerpt: '강변에 위치한 산책로와 전망대.', content: '강변에 위치한 산책로와 전망대. 벤치와 포토스팟이 많아 일출·일몰이 아름답습니다. 산책과 사진 촬영 추천.', likes: 12, views: 320, coords: [37.5, 127.0] },
   { id: 2, title: '숨은 맛집 김밥천국', category: 'food', categoryLabel: '맛집', region: 'A 권역', excerpt: '지역 주민들이 추천하는 분식집.', content: '작지만 알찬 메뉴 구성과 친절한 사장님, 즉석 김밥과 떡볶이가 인기입니다. 점심시간 대기 있을 수 있음.', likes: 48, views: 1280, coords: [37.51, 127.01] },
   { id: 3, title: '봄꽃 축제', category: 'event', categoryLabel: '축제·행사', region: 'A 권역', excerpt: '매년 열리는 소규모 꽃 축제입니다.', content: '매년 봄에 열리는 지역 꽃 축제입니다. 다양한 플리마켓과 공연이 있어 가족 단위 방문객이 많습니다.', likes: 30, views: 760, coords: [37.52, 127.02] },
-  { id: 4, title: '전통시장 야시장', category: 'event', categoryLabel: '축제·행사', region: 'A 권역', excerpt: '주말에 열리는 야시장.', content: '전통시장 야시장으로 다양한 길거리 음식과 수공예품을 판매합니다. 밤에 활기찬 분위기가 매력적입니다.', likes: 8, views: 410, coords: [37.53, 127.03] }
+  { id: 4, title: '전통시장 야시장', category: 'event', categoryLabel: '축제·행사', region: 'A 권역', excerpt: '주말에 열리는 야시장.', content: '전통시장 야시장으로 다양한 길거리 음식과 수공예품를 판매합니다. 밤에 활기찬 분위기가 매력적입니다.', likes: 8, views: 410, coords: [37.53, 127.03] }
 ]
+
+function mapCategoryLabel(cat) {
+  if (!cat) return ''
+  const c = String(cat).toLowerCase()
+  if (c === 'tour') return '관광지'
+  if (c === 'food') return '맛집'
+  if (c === 'event') return '축제·행사'
+  return cat
+}
+
+function normalizeServerItem(it) {
+  return {
+    id: it.id,
+    title: it.title,
+    category: it.category,
+    categoryLabel: mapCategoryLabel(it.category),
+    region: it.region || '',
+    excerpt: it.excerpt || '',
+    content: it.content || it.excerpt || '',
+    author_nickname: it.author_nickname || '',
+    created_at: it.created_at || '',
+    likes: it.likes ?? 0,
+    views: it.view_count ?? it.views ?? 0
+  }
+}
 
 async function fetchPosts() {
   loading.value = true
   try {
-    // 우선 로컬스토리지에 저장된 게시물이 있으면 우선 사용
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const raw = window.localStorage.getItem('localhub_posts')
-      if (raw) {
-        try {
-          const arr = JSON.parse(raw)
-          posts.value = arr.map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
-          return
-        } catch (e) {
-          // fallthrough to network/sample
-        }
+    // 먼저 항상 네트워크 호출을 시도합니다 (개발 시 localStorage가 네트워크를 막던 문제 해소)
+    console.log('Calling API: getPosts')
+    const res = await api.getPosts(undefined, 1, 10)
+    console.log('api.getPosts response:', res)
+
+    // 백엔드가 반환한 다양한 형태 지원: { items: [...] } | { data: [...] } | [...]
+    const rawItems = (res && (res.items || res.data)) || (Array.isArray(res) ? res : null)
+
+    if (Array.isArray(rawItems)) {
+      posts.value = rawItems.map(normalizeServerItem)
+      // 네트워크 성공시 로컬에 저장(선택적)
+      try { window.localStorage.setItem('localhub_posts', JSON.stringify(posts.value)) } catch (e) {}
+      return
+    }
+
+    // 만약 서버가 예상 형태가 아니라면 로컬스토리지 또는 샘플로 폴백
+    console.warn('Unexpected posts response shape, trying localStorage fallback', res)
+    const raw = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('localhub_posts') : null
+    if (raw) {
+      try {
+        const arr = JSON.parse(raw)
+        posts.value = arr.map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
+        return
+      } catch (e) {
+        // fallthrough to sample
       }
     }
-    // 백엔드가 준비되면 아래 경로로 교체하세요.
-    const res = await fetch('/api/posts?region=A') // 자리표시자
-    if (!res.ok) throw new Error('no api')
-    const data = await res.json()
-    posts.value = data
+    posts.value = sampleData
   } catch (err) {
-    // 개발 초반에는 샘플 데이터로 폴백
+    // 네트워크 실패시 로컬스토리지 우선 복구, 없으면 샘플
+    console.error('fetchPosts error:', err)
+    const raw = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('localhub_posts') : null
+    if (raw) {
+      try {
+        const arr = JSON.parse(raw)
+        posts.value = arr.map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
+        return
+      } catch (e) {}
+    }
     posts.value = sampleData
   } finally {
     loading.value = false
@@ -212,7 +256,7 @@ function onChatOpen() {
 .search-row select, .search-row button { padding:8px 12px; border-radius:4px; border:1px solid var(--border); background:transparent; cursor:pointer; color:var(--text) }
 
 .categories { display:flex; gap:12px; justify-content:center; margin:18px 0; }
-.categories button { padding:10px 18px; border-radius:6px; border:1px solid var(--accent); background:transparent; cursor:pointer; color:var(--accent); }
+.categories button { padding:10px 18px; border-radius:6px; border:1px solid var(--accent); background:transparent; cursor:pointer; color:var(--accent) }
 
 .content-grid { display:flex; gap:20px; align-items:flex-start; }
 .intro { flex:1; }

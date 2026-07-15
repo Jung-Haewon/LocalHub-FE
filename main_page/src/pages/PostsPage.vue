@@ -10,28 +10,29 @@
       <button class="new-post" @click="createPost">전체 작성 화면</button>
     </div>
 
-      <div v-if="loading">로딩 중...</div>
-      <div v-else>
-        <ul class="post-list">
-          <li v-for="p in posts" :key="p.id" class="post-card">
-            <h3>
-              <a :href="`/posts/${p.id}`" target="_blank" rel="noopener" class="post-link">{{ p.title }}</a>
-              <span class="post-actions">
-                <button class="small-btn" @click.stop="incViews(p)">👁 {{ p.views || 0 }}</button>
-                <button class="small-btn" @click.stop="incLikes(p)">👍 {{ p.likes || 0 }}</button>
-              </span>
-            </h3>
-            <p class="meta">{{ p.region }}</p>
-            <p class="excerpt">{{ p.content ?? p.excerpt ?? '' }}</p>
-          </li>
-        </ul>
-      </div>
+    <div v-if="loading">로딩 중...</div>
+    <div v-else>
+      <ul class="post-list">
+        <li v-for="p in posts" :key="p.id" class="post-card">
+          <h3>
+            <a :href="`/posts/${p.id}`" target="_blank" rel="noopener" class="post-link">{{ p.title }}</a>
+            <span class="post-actions">
+              <button class="small-btn" @click.stop="incViews(p)">👁 {{ p.views || 0 }}</button>
+              <button class="small-btn" @click.stop="incLikes(p)">👍 {{ p.likes || 0 }}</button>
+            </span>
+          </h3>
+          <p class="meta">{{ p.region }}</p>
+          <p class="excerpt">{{ p.content ?? p.excerpt ?? '' }}</p>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { api } from '../api'
 
 const router = useRouter()
 const loading = ref(false)
@@ -42,30 +43,54 @@ const samplePosts = [
   { id: 102, title: '주말에 볼만한 동네 작은 전시', region: 'B 권역', excerpt: '소규모 전시 소개합니다.' }
 ]
 
-function loadPosts() {
-  const raw = localStorage.getItem('localhub_posts')
-  if (raw) {
-    try {
-      const arr = JSON.parse(raw)
-      posts.value = arr.map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
-      return
-    } catch (e) {
-      // fallthrough
-    }
+function normalizeServerItem(it) {
+  return {
+    id: it.id,
+    title: it.title,
+    category: it.category,
+    region: it.region || '',
+    excerpt: it.excerpt || '',
+    content: it.content || it.excerpt || '',
+    author_nickname: it.author_nickname || '',
+    created_at: it.created_at || '',
+    likes: it.likes ?? 0,
+    views: it.view_count ?? it.views ?? 0
   }
-  // initialize with samples
-  posts.value = samplePosts.slice().map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
-  localStorage.setItem('localhub_posts', JSON.stringify(posts.value))
 }
 
-onMounted(() => {
+async function loadPosts() {
   loading.value = true
   try {
-    loadPosts()
+    const res = await api.getPosts(undefined, 1, 50)
+    const items = (res && (res.items || res.data)) || (Array.isArray(res) ? res : null)
+    if (Array.isArray(items)) {
+      posts.value = items.map(normalizeServerItem)
+      try { window.localStorage.setItem('localhub_posts', JSON.stringify(posts.value)) } catch(e) {}
+      return
+    }
+
+    const raw = window.localStorage.getItem('localhub_posts')
+    if (raw) {
+      posts.value = JSON.parse(raw).map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
+      return
+    }
+
+    posts.value = samplePosts
+  } catch (err) {
+    console.error('loadPosts error', err)
+    const raw = window.localStorage.getItem('localhub_posts')
+    if (raw) {
+      posts.value = JSON.parse(raw).map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
+    } else {
+      posts.value = samplePosts
+    }
   } finally {
     loading.value = false
   }
-  // Listen for storage changes from other windows (popup) to refresh list
+}
+
+onMounted(() => {
+  loadPosts()
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('storage', (e) => {
       if (e.key === 'localhub_posts') loadPosts()
@@ -73,70 +98,91 @@ onMounted(() => {
   }
 })
 
-const truncate = (text, n = 250) => {
-  const s = String(text || '')
-  return s.length > n ? s.slice(0, n) + '…' : s
-}
-
-function openPost(id) { router.push({ path: `/posts/${id}` }) }
-
-function createQuick() {
-  const title = quick.title && quick.title.trim()
-  if (!title) return alert('제목을 입력하세요')
-  const newPost = { id: Date.now(), title, excerpt: quick.excerpt || '', likes: 0, views: 0 }
-  const raw = localStorage.getItem('localhub_posts')
-  const arr = raw ? JSON.parse(raw) : []
-  arr.unshift(newPost)
-  localStorage.setItem('localhub_posts', JSON.stringify(arr))
-  loadPosts()
-  quick.title = quick.region = quick.excerpt = ''
-}
-
 const quick = ref({ title: '', excerpt: '' })
+
+async function createQuick() {
+  const title = quick.value.title && quick.value.title.trim()
+  if (!title) return alert('제목을 입력하세요')
+
+  const payload = {
+    category: '',
+    title,
+    content: quick.value.excerpt || '',
+    author_nickname: '익명',
+    password: '' // quick-create에서는 빈 문자열로 전송 (필요하면 프론트에서 사용자 입력 추가)
+  }
+
+  try {
+    const created = await api.createPost(payload)
+    const item = normalizeServerItem(created)
+    posts.value.unshift(item)
+    try { window.localStorage.setItem('localhub_posts', JSON.stringify(posts.value)) } catch(e) {}
+    quick.value.title = quick.value.excerpt = ''
+  } catch (err) {
+    console.error('createQuick error', err)
+    alert('게시글 생성에 실패했습니다.')
+  }
+}
 
 function createPost() { router.push({ path: '/posts/new' }) }
 
-function savePostsArray(arr) {
-  localStorage.setItem('localhub_posts', JSON.stringify(arr))
-}
-
-function incViews(p) {
-  const raw = localStorage.getItem('localhub_posts')
-  const arr = raw ? JSON.parse(raw) : []
-  const idx = arr.findIndex(x => String(x.id) === String(p.id))
-  if (idx >= 0) {
-    arr[idx].views = (Number(arr[idx].views) || 0) + 1
-    savePostsArray(arr)
-    loadPosts()
+async function incViews(p) {
+  try {
+    const newViews = (Number(p.views) || 0) + 1
+    await api.updatePost(p.id, { view_count: newViews })
+    const idx = posts.value.findIndex(x => String(x.id) === String(p.id))
+    if (idx >= 0) posts.value[idx].views = newViews
+    try { window.localStorage.setItem('localhub_posts', JSON.stringify(posts.value)) } catch(e) {}
+  } catch (err) {
+    console.error('incViews error', err)
   }
 }
 
-function incLikes(p) {
-  const raw = localStorage.getItem('localhub_posts')
-  const arr = raw ? JSON.parse(raw) : []
-  const idx = arr.findIndex(x => String(x.id) === String(p.id))
-  if (idx >= 0) {
-    arr[idx].likes = (Number(arr[idx].likes) || 0) + 1
-    savePostsArray(arr)
-    loadPosts()
+async function incLikes(p) {
+  try {
+    const newLikes = (Number(p.likes) || 0) + 1
+    await api.updatePost(p.id, { likes: newLikes })
+    const idx = posts.value.findIndex(x => String(x.id) === String(p.id))
+    if (idx >= 0) posts.value[idx].likes = newLikes
+    try { window.localStorage.setItem('localhub_posts', JSON.stringify(posts.value)) } catch(e) {}
+  } catch (err) {
+    console.error('incLikes error', err)
   }
 }
+
+async function createQuick() {
+  console.log('[PostsPage] createQuick called, quick=', quick.value);
+  const title = quick.value.title && quick.value.title.trim();
+  if (!title) return alert('제목을 입력하세요');
+
+  const payload = {
+    category: '',
+    title,
+    content: quick.value.excerpt || '',
+    author_nickname: '익명',
+    password: ''
+  };
+
+  try {
+    console.log('[PostsPage] createQuick payload:', payload);
+    const created = await api.createPost(payload);
+    console.log('[PostsPage] createQuick response:', created);
+    const item = normalizeServerItem(created);
+    posts.value.unshift(item);
+    try { window.localStorage.setItem('localhub_posts', JSON.stringify(posts.value)) } catch(e) {}
+    quick.value.title = quick.value.excerpt = '';
+  } catch (err) {
+    console.error('createQuick error', err);
+    alert('게시글 생성에 실패했습니다.');
+  }
+}
+
 </script>
 
 <style scoped>
 .post-list { list-style:none; padding:0; display:grid; gap:12px }
-.post-card { padding:12px; border:1px solid var(--border); border-radius:6px; cursor:pointer; background:var(--panel); color:var(--text) }
+.post-card { padding:12px; border:1px solid var(--border); border-radius:6px; background:var(--panel); color:var(--text) }
 .meta { color:var(--muted); font-size:13px }
 .excerpt { color:var(--text) }
-
-/* Prevent overflow on long text in posts list */
-.post-card { overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
-.post-card h3 { margin:0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.post-link { color: var(--text); text-decoration: none; }
-.post-link:hover { text-decoration: underline; }
-.post-actions { margin-left: 12px; display:inline-flex; gap:6px; vertical-align: middle }
-.small-btn { background:transparent; border:1px solid var(--border); color:var(--text); padding:4px 8px; border-radius:6px; cursor:pointer }
-.small-btn:hover { background: rgba(255,255,255,0.02) }
-.post-card .excerpt { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height:1.25em; -webkit-line-clamp:3; max-height: calc(1.25em * 3); word-break: break-word; overflow-wrap: anywhere; white-space: normal; }
-.new-post { margin:10px 0; padding:8px 12px; border-radius:6px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer }
+.small-btn { background:transparent; border:1px solid var(--border); padding:4px 8px; border-radius:6px; cursor:pointer }
 </style>
