@@ -6,23 +6,39 @@
 
     <div v-show="isOpen" class="panel" ref="panel">
       <header class="panel-header">LocalHub Chat <button class="close" @click="close">✕</button></header>
-      <div class="messages">
+      <div class="messages" ref="messagesContainer">
         <div v-for="(m,i) in messages" :key="i" :class="['msg', m.from]">{{ m.text }}</div>
       </div>
       <footer class="composer">
         <input v-model="input" @keyup.enter="send" placeholder="질문을 입력하세요" />
-        <button @click="send">전송</button>
+        <button
+          @click="send"
+          :disabled="loading"
+        >
+          {{ loading ? "답변 중..." : "전송" }}
+        </button>
       </footer>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref , nextTick } from 'vue'
 
 const isOpen = ref(false)
 const input = ref('')
 const messages = ref([{ from: 'bot', text: '안녕하세요 — 지역 정보를 도와드려요.' }])
+const loading = ref(false)
+const messagesContainer = ref(null)
+
+async function scrollToBottom() {
+  await nextTick()
+
+  if (messagesContainer.value) {
+    messagesContainer.value.scrollTop =
+      messagesContainer.value.scrollHeight
+  }
+}
 
 function toggle() {
   isOpen.value = !isOpen.value
@@ -33,13 +49,20 @@ function close() {
 }
 
 async function send() {
+  if (loading.value) return
   if (!input.value.trim()) return
 
+  loading.value = true
   const userText = input.value
   messages.value.push({ from: 'user', text: userText })
   input.value = ''
 
+  await scrollToBottom()
+
   messages.value.push({ from: 'bot', text: '답변을 준비중입니다...' })
+
+  await scrollToBottom()
+
   const loadingIndex = messages.value.length - 1
 
   try {
@@ -61,9 +84,14 @@ async function send() {
     // 백엔드 응답(reply)을 챗봇 메시지에 추가
     messages.value[loadingIndex].text = data.reply
     
+    await scrollToBottom()
+
   } catch (error) {
     console.error('챗봇 에러:', error)
-    messages.value.push({ from: 'bot', text: '죄송합니다. 서버와 연결할 수 없습니다.' })
+    messages.value[loadingIndex].text =
+        "죄송합니다. 서버와 연결할 수 없습니다."
+  } finally {
+    loading.value = false
   }
 }
 </script>
