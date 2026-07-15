@@ -1,0 +1,8 @@
+{
+  "name": "localhub-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd main_page && npm run dev"
+  }
+}
