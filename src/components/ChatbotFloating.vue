@@ -7,7 +7,20 @@
     <div v-show="isOpen" class="panel" ref="panel">
       <header class="panel-header">LocalHub Chat <button class="close" @click="close">✕</button></header>
       <div class="messages" ref="messagesContainer">
-        <div v-for="(m,i) in messages" :key="i" :class="['msg', m.from]">{{ m.text }}</div>
+        <div v-for="(m,i) in messages" :key="i" :class="['msg', m.from]"
+        >
+          <template v-if="m.loading">
+          <span class="typing">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </template>
+
+            <template v-else>
+              {{ m.text }}
+            </template>
+      </div>
       </div>
       <footer class="composer">
         <input v-model="input" @keyup.enter="send" placeholder="질문을 입력하세요" />
@@ -59,7 +72,7 @@ async function send() {
 
   await scrollToBottom()
 
-  messages.value.push({ from: 'bot', text: '답변을 준비중입니다...' })
+  messages.value.push({ from: 'bot', loading: true })
 
   await scrollToBottom()
 
@@ -82,7 +95,10 @@ async function send() {
 
     const data = await response.json()
     // 백엔드 응답(reply)을 챗봇 메시지에 추가
-    messages.value[loadingIndex].text = data.reply
+    messages.value[loadingIndex] = {
+      from: 'bot',
+      text: data.reply
+  }
     
     await scrollToBottom()
 
@@ -110,5 +126,38 @@ async function send() {
 .composer input { flex:1; padding:8px; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text) }
 .composer button { padding:8px 12px; border-radius:6px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer }
 .close { background:transparent;border:none;color:var(--muted);cursor:pointer }
+.typing {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.typing span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: typing 1.2s infinite;
+}
+
+.typing span:nth-child(2) {
+    animation-delay: .2s;
+}
+
+.typing span:nth-child(3) {
+    animation-delay: .4s;
+}
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(.5);
+        opacity: .3;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: .6;
+    }
+}
 @keyframes fadeIn { from { opacity:0; transform: translateY(6px) scale(.98) } to { opacity:1; transform: translateY(0) scale(1) } }
 </style>
