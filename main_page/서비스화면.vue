@@ -28,18 +28,18 @@
         <p>사용자들이 작성하는 일반 게시글은 별도의 커뮤니티 게시판으로 분리됩니다.</p>
         <button @click="goPosts">커뮤니티 게시글 보기</button>
 
-        <div class="posts-preview">
-          <h3>추천 게시물</h3>
-          <div v-if="loading">로딩 중...</div>
-          <div v-else-if="filteredPosts.length === 0">게시물이 없습니다.</div>
-          <ul class="post-list">
-            <li v-for="p in filteredPosts.slice(0,6)" :key="p.id" class="post-card" @click="openPost(p.id)">
-              <h4>{{ p.title }}</h4>
-              <p class="meta">{{ p.categoryLabel }} · {{ p.region }}</p>
-              <p class="excerpt">{{ p.excerpt }}</p>
-            </li>
-          </ul>
-        </div>
+              <div class="posts-preview">
+                <h3>추천 게시물</h3>
+                <div v-if="loading">로딩 중...</div>
+                <div v-else-if="recommendedPosts.length === 0">게시물이 없습니다.</div>
+                <ul class="post-list">
+                  <li v-for="p in recommendedPosts" :key="p.id" class="post-card" @click="openPost(p.id)">
+                    <h4>{{ p.title }}</h4>
+                    <p class="meta">{{ p.categoryLabel || '커뮤니티' }} · {{ p.region || '' }} · 조회수: {{ p.views || 0 }}</p>
+                    <p class="excerpt">{{ p.content ?? p.excerpt ?? '' }}</p>
+                  </li>
+                </ul>
+              </div>
       </div>
     </section>
 
@@ -72,15 +72,29 @@ const ChatbotWidget = defineAsyncComponent(() => import('./src/components/Chatbo
 const showChatbot = ref(true) // 플로팅 위젯 노출 토글
 
 const sampleData = [
-  { id: 1, title: '한적한 뷰 포인트', category: 'tour', categoryLabel: '관광지', region: 'A 권역', excerpt: '강변에 위치한 산책로와 전망대.', coords: [37.5, 127.0] },
-  { id: 2, title: '숨은 맛집 김밥천국', category: 'food', categoryLabel: '맛집', region: 'A 권역', excerpt: '지역 주민들이 추천하는 분식집.', coords: [37.51, 127.01] },
-  { id: 3, title: '봄꽃 축제', category: 'event', categoryLabel: '축제·행사', region: 'A 권역', excerpt: '매년 열리는 소규모 꽃 축제입니다.', coords: [37.52, 127.02] }
+  { id: 1, title: '한적한 뷰 포인트', category: 'tour', categoryLabel: '관광지', region: 'A 권역', excerpt: '강변에 위치한 산책로와 전망대.', content: '강변에 위치한 산책로와 전망대. 벤치와 포토스팟이 많아 일출·일몰이 아름답습니다. 산책과 사진 촬영 추천.', likes: 12, views: 320, coords: [37.5, 127.0] },
+  { id: 2, title: '숨은 맛집 김밥천국', category: 'food', categoryLabel: '맛집', region: 'A 권역', excerpt: '지역 주민들이 추천하는 분식집.', content: '작지만 알찬 메뉴 구성과 친절한 사장님, 즉석 김밥과 떡볶이가 인기입니다. 점심시간 대기 있을 수 있음.', likes: 48, views: 1280, coords: [37.51, 127.01] },
+  { id: 3, title: '봄꽃 축제', category: 'event', categoryLabel: '축제·행사', region: 'A 권역', excerpt: '매년 열리는 소규모 꽃 축제입니다.', content: '매년 봄에 열리는 지역 꽃 축제입니다. 다양한 플리마켓과 공연이 있어 가족 단위 방문객이 많습니다.', likes: 30, views: 760, coords: [37.52, 127.02] },
+  { id: 4, title: '전통시장 야시장', category: 'event', categoryLabel: '축제·행사', region: 'A 권역', excerpt: '주말에 열리는 야시장.', content: '전통시장 야시장으로 다양한 길거리 음식과 수공예품을 판매합니다. 밤에 활기찬 분위기가 매력적입니다.', likes: 8, views: 410, coords: [37.53, 127.03] }
 ]
 
 async function fetchPosts() {
   loading.value = true
   try {
-    // 백엔드가 준비되면 아래 경로로 교체하세요. (절대 백엔드 먼저 구현하지 마세요)
+    // 우선 로컬스토리지에 저장된 게시물이 있으면 우선 사용
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem('localhub_posts')
+      if (raw) {
+        try {
+          const arr = JSON.parse(raw)
+          posts.value = arr.map(p => ({ ...p, likes: p.likes ?? 0, views: p.views ?? 0 }))
+          return
+        } catch (e) {
+          // fallthrough to network/sample
+        }
+      }
+    }
+    // 백엔드가 준비되면 아래 경로로 교체하세요.
     const res = await fetch('/api/posts?region=A') // 자리표시자
     if (!res.ok) throw new Error('no api')
     const data = await res.json()
@@ -95,6 +109,12 @@ async function fetchPosts() {
 
 onMounted(() => {
   fetchPosts()
+  // 다른 창(팝업)에서 로컬스토리지가 변경되면 실시간으로 반영
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'localhub_posts') fetchPosts()
+    })
+  }
   // 지도 초기화는 별도 컴포넌트에서 처리하세요
 })
 
@@ -105,6 +125,39 @@ const filteredPosts = computed(() => {
     return true
   })
 })
+
+// 추천 게시물: content/excerpt 길이 + likes/views를 반영한 복합 점수로 상위 4개 선택
+const recommendedPosts = computed(() => {
+  const list = posts.value.slice()
+
+  // normalize helper
+  const normalize = (arr, key) => {
+    const vals = arr.map(x => Number(x[key] ?? 0))
+    const max = Math.max(...vals, 1)
+    return arr.map(x => (Number(x[key] ?? 0) / max))
+  }
+
+  // prepare arrays for likes and views normalization
+  const likesNorm = normalize(list, 'likes')
+  const viewsNorm = normalize(list, 'views')
+
+  // compute score: lengthWeight=0.6, likes=0.3, views=0.1
+  const lengthWeight = 0.6, likesWeight = 0.3, viewsWeight = 0.1
+
+  const scored = list.map((item, idx) => {
+    const text = String(item.content ?? item.excerpt ?? `${item.title} ${item.excerpt ?? ''}`)
+    const lenScore = Math.min(text.length / 500, 1) // cap
+    const likeScore = likesNorm[idx] ?? 0
+    const viewScore = viewsNorm[idx] ?? 0
+    const score = lenScore * lengthWeight + likeScore * likesWeight + viewScore * viewsWeight
+    return { item, score }
+  })
+
+  scored.sort((a, b) => b.score - a.score)
+  return scored.slice(0, 4).map(s => s.item)
+})
+
+// excerpt truncation is handled via CSS line-clamp (3 lines)
 
 function goCategory(cat) {
   filter.value = cat
@@ -168,6 +221,14 @@ function onChatOpen() {
 .post-card:hover { box-shadow:0 6px 18px rgba(0,0,0,0.4); }
 .meta { color:var(--muted); font-size:13px; margin:6px 0; }
 .excerpt { color:var(--text); font-size:14px; }
+
+/* Prevent overflow and long-words from breaking layout */
+.post-card { overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
+.post-card h4 { margin:0 0 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Truncate excerpt text to fit card. Recommended: 3 lines, Posts list: handled separately */
+.post-card .excerpt { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.25em; word-break: break-word; overflow-wrap: anywhere; white-space: normal; }
+.posts-preview .post-card .excerpt { -webkit-line-clamp: 3; max-height: calc(1.25em * 3); }
 
 .map-section { width:360px; }
 .map-placeholder { height:220px; background:transparent; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; color:var(--muted); border-radius:6px; margin-bottom:10px; }

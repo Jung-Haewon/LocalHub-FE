@@ -45,12 +45,12 @@ function onSave() {
   if (isEdit) {
     const idx = arr.findIndex(p => String(p.id) === String(id))
       if (idx >= 0) {
-      arr[idx] = { ...arr[idx], title: form.title, content: form.content, excerpt: form.content }
+      arr[idx] = { ...arr[idx], title: form.title, content: form.content, excerpt: form.content, likes: arr[idx].likes ?? 0, views: arr[idx].views ?? 0 }
     }
     localStorage.setItem('localhub_posts', JSON.stringify(arr))
     router.push({ path: `/posts/${id}` })
   } else {
-    const newPost = { id: Date.now(), title: form.title, content: form.content, excerpt: form.content }
+    const newPost = { id: Date.now(), title: form.title, content: form.content, excerpt: form.content, likes: 0, views: 0 }
     arr.unshift(newPost)
     localStorage.setItem('localhub_posts', JSON.stringify(arr))
     router.push({ path: '/posts' })

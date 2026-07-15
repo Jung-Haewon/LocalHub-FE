@@ -14,6 +14,9 @@
     .meta{color:var(--muted);font-size:13px;margin-top:6px}
     .actions{margin-top:12px}
     .btn{padding:8px 12px;border-radius:6px;border:1px solid #3b82f6;background:transparent;color:#3b82f6;cursor:pointer}
+    /* prevent long words from breaking layout and clamp excerpt to 3 lines */
+    .card { overflow: hidden; word-break: break-word; overflow-wrap: anywhere; }
+    .card p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; text-overflow: ellipsis; line-height: 1.25em; max-height: calc(1.25em * 3); word-break: break-word; overflow-wrap: anywhere; white-space: normal; }
   </style>
 </head>
 <body>
@@ -62,42 +65,11 @@
           title.textContent = p.title
           const meta = document.createElement('div')
           meta.className = 'meta'
-          meta.textContent = `ID: ${p.id}`
+          meta.textContent = `ID: ${p.id} · 조회수: ${p.views || 0}`
           const excerpt = document.createElement('p')
           excerpt.innerHTML = escapeHtml(p.excerpt||p.content||'')
 
-          const controls = document.createElement('div')
-          controls.style.marginTop = '8px'
-
-          const btnEdit = document.createElement('button')
-          btnEdit.className = 'btn'
-          btnEdit.textContent = '수정'
-          btnEdit.addEventListener('click', (ev) => {
-            ev.stopPropagation()
-            const pwd = prompt('게시글 비밀번호를 입력하세요 (수정용)')
-            if (String(p.password || '') !== String(pwd)) { alert('비밀번호가 일치하지 않습니다.'); return }
-            editingId = p.id
-            document.getElementById('f-title').value = p.title || ''
-            document.getElementById('f-content').value = p.content || p.excerpt || ''
-            document.getElementById('f-password').value = ''
-            document.getElementById('form-wrap').style.display = 'block'
-          })
-
-          const btnDelete = document.createElement('button')
-          btnDelete.className = 'btn'
-          btnDelete.style.marginLeft = '8px'
-          btnDelete.textContent = '삭제'
-          btnDelete.addEventListener('click', (ev) => {
-            ev.stopPropagation()
-            const pwd = prompt('게시글 비밀번호를 입력하세요 (삭제용)')
-            if (String(p.password || '') !== String(pwd)) { alert('비밀번호가 일치하지 않습니다.'); return }
-            if (!confirm('정말 삭제하시겠습니까?')) return
-            const raw2 = localStorage.getItem('localhub_posts')
-            const arr2 = raw2 ? JSON.parse(raw2) : []
-            const filtered = arr2.filter(x => String(x.id) !== String(p.id))
-            localStorage.setItem('localhub_posts', JSON.stringify(filtered))
-            render()
-          })
+          // edit/delete handled in detail page now; no inline controls here
 
           // open detail on card click
           el.addEventListener('click', () => {
@@ -105,12 +77,9 @@
             window.open(url, '_blank')
           })
 
-          controls.appendChild(btnEdit)
-          controls.appendChild(btnDelete)
           el.appendChild(title)
           el.appendChild(meta)
           el.appendChild(excerpt)
-          el.appendChild(controls)
           list.appendChild(el)
         })
       }
@@ -128,7 +97,7 @@
         document.getElementById('form-wrap').style.display = 'none'
       })
 
-      document.getElementById('btn-save').addEventListener('click', () => {
+        document.getElementById('btn-save').addEventListener('click', () => {
         const titleEl = document.getElementById('f-title')
         const contentEl = document.getElementById('f-content')
         const pwdEl = document.getElementById('f-password')
@@ -143,11 +112,11 @@
         if (editingId) {
           const idx = arr.findIndex(x => String(x.id) === String(editingId))
           if (idx >= 0) {
-            arr[idx] = { ...arr[idx], title, content, excerpt: content, password: pwd }
+            arr[idx] = { ...arr[idx], title, content, excerpt: content, password: pwd, likes: arr[idx].likes || 0, views: arr[idx].views || 0 }
           }
           editingId = null
         } else {
-          const newP = { id: Date.now(), title, content, excerpt: content, password: pwd }
+          const newP = { id: Date.now(), title, content, excerpt: content, password: pwd, likes: 0, views: 0 }
           arr.unshift(newP)
         }
         localStorage.setItem('localhub_posts', JSON.stringify(arr))
