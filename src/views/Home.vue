@@ -3,10 +3,13 @@
     <header class="hero" :style="heroStyle">
       <div class="hero-overlay"></div>
       <div class="hero-inner container">
+        <h1 class="hero-title">서울의 모든 정보, LocalHub에서</h1>
+        <p class="hero-subtitle">관광지·숙박·쇼핑부터 우리 동네 이야기까지</p>
+        <button class="btn hero-cta" @click="scrollToCategories">카테고리 둘러보기</button>
       </div>
     </header>
 
-    <section class="cards-section">
+    <section class="cards-section" id="categories-section">
       <div class="container">
         <div class="section-head reveal">
           <div class="head-row">
@@ -194,7 +197,12 @@ export default {
       backgroundPosition: 'center center'
     }
 
-    return { categoriesPreview, recentPosts, formatDate, heroStyle }
+    const scrollToCategories = () => {
+      const el = document.getElementById('categories-section')
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+
+    return { categoriesPreview, recentPosts, formatDate, heroStyle, scrollToCategories }
   }
 }
 </script>
@@ -234,8 +242,8 @@ export default {
 .hero-overlay{
   position:absolute;
   inset:0;
-  /* warm subtle overlay to enhance sunset banner */
-  background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.28) 100%);
+  /* 왼쪽에 텍스트를 배치하므로 왼쪽을 더 진하게, 오른쪽은 이미지가 살도록 옅게 */
+  background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.05) 100%);
   pointer-events:none;
 }
 .hero-inner{
@@ -244,10 +252,27 @@ export default {
   width:100%;
   height:100%;
   display:flex;
-  align-items:center;
-  justify-content:flex-end;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
   padding:24px;
 }
+.hero-title{
+  margin:0 0 10px;
+  font-family:var(--font-title);
+  font-size:32px;
+  font-weight:700;
+  color:#fff;
+  text-shadow:0 2px 10px rgba(0,0,0,0.4);
+  max-width:560px;
+}
+.hero-subtitle{
+  margin:0 0 20px;
+  font-size:15px;
+  color:rgba(255,255,255,0.92);
+  text-shadow:0 1px 6px rgba(0,0,0,0.35);
+}
+.hero-cta{ font-size:14px }
 
 /* Buttons */
 .btn{ background:var(--primary); color:#fff; padding:12px 16px; border-radius:var(--radius); font-weight:700; box-shadow:var(--shadow-sm); transition:transform .15s ease, box-shadow .15s ease, background .15s ease }
@@ -313,12 +338,13 @@ export default {
 }
 
 /* Responsive */
-@media (max-width: 1000px){ .cards-grid{ grid-template-columns:repeat(3,1fr) } .hero-inner{ flex-direction:column; align-items:flex-start } }
+@media (max-width: 1000px){ .cards-grid{ grid-template-columns:repeat(3,1fr) } }
 @media (max-width: 720px){
   .cards-grid{ grid-template-columns:repeat(2,1fr) }
   .container{padding:0 14px}
   .hero{ height:220px }
-  .hero-inner{ justify-content:center }
+  .hero-title{ font-size:22px; max-width:100% }
+  .hero-subtitle{ font-size:13px }
   .cards-section{ padding:32px 0 }
   .recent-section{ padding:32px 0 40px }
 }
