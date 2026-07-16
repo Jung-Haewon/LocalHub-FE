@@ -10,7 +10,7 @@
             </svg>
             <span class="brand-name">LocalHub</span>
           </div>
-          <p class="brand-desc">서울의 지역 정보를 한 곳에서 — 관광지, 숙박, 쇼핑부터 우리 동네 이야기까지.</p>
+          <p class="brand-desc">서울의 지역 정보를 한 곳에서 확인하세요.</p>
         </div>
 
         <div class="footer-col">
@@ -30,9 +30,10 @@
         </div>
 
         <div class="footer-col">
-          <h4>문의</h4>
-          <a href="mailto:contact@localhub.example">contact@localhub.example</a>
-          <a href="https://github.com/" target="_blank" rel="noopener">GitHub 저장소</a>
+          <h4>데이터 출처</h4>
+          <p class="source-desc">이 서비스는 한국관광공사 Tour API(TourAPI 4.0)의 데이터를 활용하였습니다.</p>
+          <a href="https://www.data.go.kr/data/15101578/openapi.do" target="_blank" rel="noopener">공공데이터포털에서 보기</a>
+          <span class="license-tag">라이선스: 공공누리 제3유형</span>
         </div>
       </div>
 
@@ -101,6 +102,8 @@ export default {
   transition: color .15s;
 }
 .footer-col a:hover { color: var(--primary, #ff6b3d); }
+.source-desc { font-size: 0.8rem; line-height: 1.5; margin: 0; color: #999; }
+.license-tag { font-size: 0.75rem; color: #aaa; }
 
 .footer-bottom {
   margin-top: 2rem;
