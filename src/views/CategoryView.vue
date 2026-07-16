@@ -125,9 +125,13 @@ export default {
 </script>
 
 <style scoped>
-.grid { display:flex; gap:12px; flex-wrap:wrap }
-.card { width:30%; border:1px solid #eee; padding:8px }
-.card img { width:100%; height:140px; object-fit:cover }
-.addr { color:#666; font-size:0.9rem }
-.controls { margin-bottom:12px }
+.grid { display:flex; gap:20px; flex-wrap:wrap }
+.card { width:30%; border:1px solid #eee; padding:18px; border-radius:8px; background:#fff; box-shadow:0 1px 6px rgba(16,24,40,0.03) }
+.card img { width:100%; height:160px; object-fit:cover; border-radius:6px }
+.info h4 { margin:0 0 8px }
+.addr { color:#666; font-size:0.95rem; margin:0 }
+.controls { margin-bottom:18px; display:flex; gap:12px; align-items:center }
+@media(max-width:720px){
+  .card{width:48%}
+}
 </style>

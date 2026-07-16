@@ -1,34 +1,49 @@
 <template>
-  <main class="home">
-    <section class="banner">
-      <div class="banner-inner">
-        <h2>지역 정보 공유 커뮤니티 LocalHub</h2>
-        <p class="sub">선정 권역(○○시/○○구) 지역 정보를 한눈에 만나보세요</p>
+  <main class="home-view">
+    <header class="hero">
+      <div class="hero-inner container">
+        <div class="hero-text">
+          <h1>지역 정보 공유 커뮤니티 <span class="brand">LocalHub</span></h1>
+          <p class="lead">서울의 지역 정보를 프리미엄하게 정리하여 제공합니다.</p>
+        </div>
+        <div class="hero-actions">
+          <router-link to="/posts" class="btn">커뮤니티 바로가기</router-link>
+        </div>
       </div>
-    </section>
+    </header>
 
-    <section class="categories">
-      <h3>카테고리 바로가기</h3>
-      <div class="grid">
-        <router-link v-for="(c, idx) in categoriesPreview" :key="idx" class="cat-card" :to="{ name: 'Category', params: { id: c.id } }">
-          <div class="thumb">
-            <img v-if="c.thumbnail" :src="c.thumbnail" alt="카테고리 이미지" />
-            <div v-else class="placeholder">사진</div>
-            <div class="count" v-if="c.count">{{ c.count }}</div>
+    <section class="cards container">
+      <div class="section-head">
+        <h2>카테고리 바로가기</h2>
+        <p class="muted">원하는 카테고리를 선택해 지역 정보를 빠르게 찾아보세요.</p>
+      </div>
+
+      <div class="cards-grid">
+        <router-link v-for="(c, idx) in categoriesPreview" :key="idx" class="card" :to="{ name: 'Category', params: { id: c.id } }">
+          <div class="card-media">
+            <img v-if="c.thumbnail" :src="c.thumbnail" alt="thumb" />
+            <div v-else class="media-placeholder">사진</div>
+            <div class="badge">{{ c.count }}</div>
           </div>
-          <div class="label">{{ c.name }}</div>
+          <div class="card-body">
+            <h3 class="card-title">{{ c.name }}</h3>
+          </div>
         </router-link>
       </div>
     </section>
 
-    <section class="recent">
-      <h3>최근 게시글</h3>
-      <div class="list">
-        <div v-for="(p,i) in recentPosts" :key="p.id" class="recent-item">
-          <router-link :to="`/posts/${p.id}`" class="recent-title">{{ p.title }}</router-link>
-          <div class="recent-date">{{ formatDate(p.created_at) }}</div>
-        </div>
-        <div v-if="recentPosts.length===0">게시글이 없습니다.</div>
+    <section class="recent container">
+      <div class="section-head">
+        <h2>최근 게시글</h2>
+        <p class="muted">최근에 작성된 글을 한눈에 확인하세요.</p>
+      </div>
+
+      <div class="recent-list">
+        <article v-for="p in recentPosts" :key="p.id" class="post-card">
+          <router-link :to="`/posts/${p.id}`" class="post-title">{{ p.title }}</router-link>
+          <div class="post-meta">{{ formatDate(p.created_at) }}</div>
+        </article>
+        <div v-if="recentPosts.length===0" class="empty">게시글이 없습니다.</div>
       </div>
     </section>
   </main>
@@ -39,6 +54,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import api from '../services/api'
 
 export default {
+  name: 'HomeView',
   setup () {
     const categories = ref([])
     const recentPosts = ref([])
@@ -59,7 +75,7 @@ export default {
 
     const fetchRecent = async () => {
       try {
-        const r = await api.get('/posts', { params: { page: 1, size: 5 } })
+        const r = await api.get('/posts', { params: { page: 1, size: 8 } })
         recentPosts.value = r.data.items || []
       } catch (e) {
         recentPosts.value = []
@@ -69,7 +85,6 @@ export default {
     onMounted(() => {
       fetchCategories()
       fetchRecent()
-      // if a map element exists on the page (rendered elsewhere), hide it on Home
       const mapEl = document.getElementById('kakao-map')
       if (mapEl) {
         mapEl.dataset._home_was_hidden = mapEl.style.display || ''
@@ -87,7 +102,7 @@ export default {
 
     const recommendedOrder = [
       { id: 'tourist_spot', name: '관광지' },
-      { id: 'festival', name: '축제공연행사' },
+      { id: 'festival', name: '축제/공연/행사' },
       { id: 'accommodation', name: '숙박' },
       { id: 'shopping', name: '쇼핑' },
       { id: 'leports', name: '레포츠' },
@@ -96,59 +111,98 @@ export default {
     ]
 
     const categoriesPreview = computed(() => {
-      // Merge backend categories into recommended list with flexible matching
       const backend = categories.value || []
-
       const findBackend = (req) => {
-        // exact id match
         let found = backend.find(b => b.id === req.id)
         if (found) return found
-        // match by name
         found = backend.find(b => (b.name && b.name.indexOf(req.name) !== -1) || (req.name && req.name.indexOf(b.name) !== -1))
         if (found) return found
-        // special-case: travel course variants (like '서울_여행코스')
-        if (req.id === 'travel_course') {
-          found = backend.find(b => b.id && b.id.toLowerCase().includes('여행') || (b.name && b.name.indexOf('여행') !== -1))
-          if (found) return found
-        }
-        // match by id substring
-        found = backend.find(b => req.id && b.id && b.id.indexOf(req.id) !== -1)
+        found = backend.find(b => b.id && req.id && b.id.indexOf(req.id) !== -1)
         return found
       }
-
       return recommendedOrder.map(r => {
         const b = findBackend(r)
-        if (b) {
-          const displayName = (r.id === 'travel_course') ? '여행코스' : (b.name || r.name)
-          // use backend id when available so category pages query the correct id
-          return { id: b.id || r.id, name: displayName, thumbnail: b.thumbnail || null, count: b.count || 0 }
-        }
+        if (b) return { id: b.id || r.id, name: b.name || r.name, thumbnail: b.thumbnail || null, count: b.count || 0 }
         return { id: r.id, name: r.name, thumbnail: null, count: 0 }
       })
     })
 
-    const formatDate = (s) => s ? new Date(s).toLocaleDateString() : ''
+    const formatDate = (s) => {
+      if (!s) return ''
+      const d = new Date(s)
+      if (isNaN(d)) return s
+      const yy = d.getFullYear()
+      const mm = String(d.getMonth()+1).padStart(2,'0')
+      const dd = String(d.getDate()).padStart(2,'0')
+      return `${yy}-${mm}-${dd}`
+    }
 
-    return { categories, recentPosts, categoriesPreview, formatDate }
+    return { categoriesPreview, recentPosts, formatDate }
   }
 }
 </script>
 
 <style scoped>
-.banner { background:#e9f1ff; padding:28px 12px; text-align:center; border:1px solid #e1e7f0 }
-.banner-inner h2 { margin:0; color:#1a63b8 }
-.banner-inner .sub { margin-top:6px; color:#666 }
-.categories { padding:18px 12px }
-.categories .grid { display:flex; gap:12px; margin-top:8px }
-.cat-card { flex:1; border:1px solid #ddd; padding:12px; display:flex; flex-direction:column; align-items:center }
-.thumb { width:100%; height:100px; display:flex; align-items:center; justify-content:center; background:#fafafa; margin-bottom:8px; position:relative }
-.thumb img { width:100%; height:100%; object-fit:cover }
-.count { position:absolute; right:6px; bottom:6px; background:rgba(0,0,0,0.6); color:#fff; padding:2px 6px; border-radius:12px; font-size:0.8rem }
-.placeholder { color:#999 }
-.label { font-weight:600 }
-.recent { padding:18px 12px }
-.recent .list { border-top:1px solid #eee }
-.recent-item { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f3f3f3 }
-.recent-title { color:#333 }
-.recent-date { color:#999 }
+/* Design tokens (as requested) */
+:root {
+  --font-title: 'Outfit', 'Pretendard', sans-serif;
+  --font-body: 'Pretendard', sans-serif;
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --primary: #4f46e5;
+  --primary-light: #e0e7ff;
+  --secondary: #10b981;
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+  --border: #e2e8f0;
+  --radius: 16px;
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 16px 36px -12px rgba(79, 70, 229, 0.08), 0 4px 12px -4px rgba(0, 0, 0, 0.03);
+}
+
+/* Page */
+.home-view { background:var(--bg-main); min-height:100vh; font-family:var(--font-body); color:var(--text-main); padding-bottom:48px }
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* Hero / Banner */
+.hero{ background:var(--bg-main); padding:48px 0 }
+.hero-inner{ display:flex; align-items:center; justify-content:space-between; gap:20px }
+.hero-text h1{ font-family:var(--font-title); color:var(--text-main); font-size:32px; margin:0; font-weight:700 }
+.hero-text .brand{ color:var(--primary) }
+.lead{ margin-top:8px; color:var(--text-dim); font-size:15px }
+.hero-actions{ display:flex; gap:12px }
+
+/* Buttons */
+.btn{ background:var(--primary); color:#fff; padding:12px 16px; border-radius:var(--radius); font-weight:700; box-shadow:var(--shadow-sm); transition:transform .15s ease, box-shadow .15s ease, background .15s ease }
+.btn:hover{ transform:translateY(-3px); box-shadow:var(--shadow-md) }
+.btn.secondary{ background:transparent; color:var(--text-main); border:1px solid var(--border); box-shadow:none }
+.btn.secondary:hover{ background:var(--primary-light); color:var(--primary) }
+
+/* Cards grid */
+.cards{ padding:28px 0 }
+.section-head h2{ font-family:var(--font-title); font-size:20px; margin:0; color:var(--text-main) }
+.section-head .muted{ margin-top:6px; color:var(--text-dim); font-size:14px }
+.cards-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-top:18px }
+.card{ background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:box-shadow .18s ease, transform .18s ease; display:flex; flex-direction:column; text-decoration:none }
+.card:hover{ box-shadow:var(--shadow-md); transform:translateY(-6px) }
+.card-media{ position:relative; height:140px; background:var(--primary-light); display:flex; align-items:center; justify-content:center }
+.card-media img{ width:100%; height:100%; object-fit:cover }
+.media-placeholder{ color:var(--text-dim) }
+.badge{ position:absolute; right:12px; bottom:12px; background:rgba(15,23,42,0.85); color:#fff; padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px }
+.card-body{ padding:16px }
+.card-title{ margin:0; font-family:var(--font-title); font-size:16px; color:var(--text-main) }
+
+/* Recent posts */
+.recent{ padding:28px 0 }
+.recent-list{ display:flex; flex-direction:column; gap:12px; margin-top:12px }
+.post-card{ background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; transition:box-shadow .12s ease }
+.post-card:hover{ box-shadow:var(--shadow-sm) }
+.post-title{ font-weight:700; color:var(--text-main); text-decoration:none }
+.post-meta{ color:var(--text-dim); font-size:13px }
+.empty{ color:var(--text-dim); padding:12px 0 }
+
+/* Responsive */
+@media (max-width: 1000px){ .cards-grid{ grid-template-columns:repeat(3,1fr) } .hero-inner{ flex-direction:column; align-items:flex-start } }
+@media (max-width: 720px){ .cards-grid{ grid-template-columns:repeat(2,1fr) } .container{padding:0 14px} .hero-text h1{font-size:22px} }
+
 </style>
