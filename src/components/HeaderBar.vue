@@ -58,7 +58,7 @@ export default {
       { id: 'shopping', name: '쇼핑' },
       { id: 'leports', name: '레포츠' },
       { id: 'culture', name: '문화시설' },
-      { id: 'travel_course', name: '여행코스' }
+      { id: 'travel_course', name: '서울_여행코스' }
     ]
 
     const isCategoryActive = computed(() => route.name === 'Category')
