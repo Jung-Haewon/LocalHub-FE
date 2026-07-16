@@ -19,6 +19,18 @@
 
             <template v-else>
               {{ m.text }}
+              <div v-if="m.sources?.length" class="sources">
+
+              <router-link
+                  v-for="source in m.sources"
+                  :key="source.id"
+                  :to="`/locations/${source.id}`"
+                  class="source-link"
+              >
+                  📍 {{ source.name }}
+              </router-link>
+
+          </div>
             </template>
       </div>
       </div>
@@ -42,7 +54,7 @@ import { SendHorizontal } from 'lucide-vue-next'
 
 const isOpen = ref(false)
 const input = ref('')
-const messages = ref([{ from: 'bot', text: '안녕하세요 — 지역 정보를 도와드려요.' }])
+const messages = ref([{ from: 'bot', text: '안녕하세요. LocalHub 서울 관광 안내 챗봇 서울이입니다. 서울의 명소 문화시설 쇼핑 레포츠 숙박 여행코스 축제 공연 정보를 도와드립니다.' }])
 const loading = ref(false)
 const messagesContainer = ref(null)
 
@@ -96,10 +108,15 @@ async function send() {
     if (!response.ok) throw new Error('API 응답 실패')
 
     const data = await response.json()
+
+    console.log("API Response:", data)
+    console.log("Sources:", data.sources)
+
     // 백엔드 응답(reply)을 챗봇 메시지에 추가
     messages.value[loadingIndex] = {
       from: 'bot',
-      text: data.reply
+      text: data.reply,
+      sources: data.sources
   }
     
     await scrollToBottom()
@@ -173,6 +190,23 @@ async function send() {
 .send-btn:disabled {
     opacity: .5;
     cursor: not-allowed;
+}
+
+.sources {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.source-link {
+    color: #2b7cff;
+    text-decoration: none;
+    font-size: 15px;
+}
+
+.source-link:hover {
+    text-decoration: underline;
 }
 
 @keyframes typing {
