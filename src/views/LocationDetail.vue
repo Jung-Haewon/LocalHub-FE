@@ -1,5 +1,7 @@
 <template>
   <div class="location-detail">
+    <nav class="breadcrumb" v-if="item">홈 &gt; 카테고리 &gt; {{ item.title }}</nav>
+
     <div class="detail-card">
       <div class="photo-wrap">
         <img v-if="item && item.first_image" :src="item.first_image" alt="img" @load="onImageLoad" />
@@ -370,6 +372,8 @@ export default {
   margin: 0 auto;
   padding: clamp(1rem, 2vw, 2rem) 1rem;
 }
+
+.breadcrumb { color: #999; font-size: 0.85rem; margin-bottom: 1rem; }
 
 .detail-card {
   background: #fff;

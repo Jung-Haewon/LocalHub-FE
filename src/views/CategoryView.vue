@@ -1,6 +1,8 @@
 <template>
   <div class="category-page">
     <div class="page-container">
+      <nav class="breadcrumb">홈 &gt; 카테고리 &gt; {{ title }}</nav>
+
       <div class="category-header">
         <div>
           <h2>{{ title }}</h2>
@@ -133,6 +135,8 @@ export default {
   margin: 0 auto;
   padding: clamp(1rem, 2vw, 2rem) 1rem 3rem;
 }
+
+.breadcrumb { color: #999; font-size: 0.85rem; margin-bottom: 1rem; }
 
 .category-header {
   display: flex;
