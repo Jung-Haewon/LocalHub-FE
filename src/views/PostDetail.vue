@@ -14,6 +14,8 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useRouter } from 'vue-router'
+import { showToast } from '../components/Toast.vue'
+import { showPasswordModal } from '../services/modal'
 
 export default {
   props: ['id'],
@@ -27,10 +29,15 @@ export default {
     }
 
     const onDelete = async () => {
-      const pwd = prompt('비밀번호를 입력하세요')
+      const pwd = await showPasswordModal()
       if (!pwd) return
-      await api.delete(`/posts/${props.id}`, { data: { password: pwd } })
-      router.push('/posts')
+      try {
+        await api.delete(`/posts/${props.id}`, { data: { password: pwd } })
+        showToast('삭제되었습니다.', 'success')
+        router.push('/posts')
+      } catch (e) {
+        showToast(e.response?.data?.detail || e.message || '삭제 중 오류', 'error')
+      }
     }
 
     onMounted(fetch)

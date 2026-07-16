@@ -31,6 +31,7 @@
 import { ref, onMounted } from 'vue'
 import api from '../services/api'
 import { useRoute, useRouter } from 'vue-router'
+import { showToast } from '../components/Toast.vue'
 
 export default {
   setup () {
@@ -47,13 +48,29 @@ export default {
       }
     }
 
+    const validate = () => {
+      if (!form.value.category) return '카테고리를 선택하세요.'
+      if (!form.value.title || form.value.title.trim().length < 1) return '제목을 입력하세요.'
+      if (!form.value.content || form.value.content.trim().length < 1) return '본문을 입력하세요.'
+      if (!form.value.password || form.value.password.trim().length < 1) return '비밀번호를 입력하세요.'
+      return null
+    }
+
     const onSubmit = async () => {
-      if (isEdit) {
-        await api.put(`/posts/${route.params.id}`, { title: form.value.title, content: form.value.content, password: form.value.password })
-        router.push(`/posts/${route.params.id}`)
-      } else {
-        const r = await api.post('/posts', form.value)
-        router.push(`/posts/${r.data.id}`)
+      const err = validate()
+      if (err) { showToast(err, 'error'); return }
+      try {
+        if (isEdit) {
+          await api.put(`/posts/${route.params.id}`, { title: form.value.title, content: form.value.content, password: form.value.password })
+          showToast('게시글이 수정되었습니다.', 'success')
+          router.push(`/posts/${route.params.id}`)
+        } else {
+          const r = await api.post('/posts', form.value)
+          showToast('게시글이 작성되었습니다.', 'success')
+          router.push(`/posts/${r.data.id}`)
+        }
+      } catch (e) {
+        showToast(e.response?.data?.detail || e.message || '요청 중 오류가 발생했습니다.', 'error')
       }
     }
 

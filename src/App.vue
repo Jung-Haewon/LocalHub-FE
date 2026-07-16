@@ -4,6 +4,7 @@
     <router-view />
     <FooterBar />
     <ChatbotFloating />
+    <Toast />
   </div>
 </template>
 
@@ -11,11 +12,13 @@
 import HeaderBar from './components/HeaderBar.vue'
 import FooterBar from './components/FooterBar.vue'
 import ChatbotFloating from './components/ChatbotFloating.vue'
+import Toast from './components/Toast.vue'
 
 export default {
-  components: { HeaderBar, FooterBar, ChatbotFloating }
+  components: { HeaderBar, FooterBar, ChatbotFloating, Toast }
 }
 </script>
+
 
 <style>
 body { margin: 0; font-family: Inter, system-ui, Arial; }
