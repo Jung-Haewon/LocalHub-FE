@@ -27,8 +27,9 @@
         <button
           @click="send"
           :disabled="loading"
+        class="send-btn"
         >
-          {{ loading ? "답변 중..." : "전송" }}
+          <SendHorizontal :size="18" />
         </button>
       </footer>
     </div>
@@ -37,6 +38,7 @@
 
 <script setup>
 import { ref , nextTick } from 'vue'
+import { SendHorizontal } from 'lucide-vue-next'
 
 const isOpen = ref(false)
 const input = ref('')
@@ -146,6 +148,31 @@ async function send() {
 
 .typing span:nth-child(3) {
     animation-delay: .4s;
+}
+
+.send-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--accent);
+    color: rgb(255, 255, 255);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    transition: .2s;
+}
+
+.send-btn:hover:not(:disabled) {
+    transform: scale(1.08);
+}
+
+.send-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
 }
 
 @keyframes typing {
