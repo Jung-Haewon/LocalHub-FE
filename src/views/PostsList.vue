@@ -12,11 +12,13 @@
       <div class="posts-row header">
         <div class="col num">번호</div>
         <div class="col title">제목</div>
+        <div class="col author">작성자</div>
         <div class="col date">작성일</div>
       </div>
       <div v-for="(item, idx) in items" :key="item.id" class="posts-row">
         <div class="col num">{{ total - ((page-1)*size) - idx }}</div>
         <div class="col title"><router-link :to="`/posts/${item.id}`">{{ item.title }}</router-link></div>
+        <div class="col author">{{ item.author_nickname || '익명' }}</div>
         <div class="col date">{{ formatDate(item.created_at) }}</div>
       </div>
     </div>
@@ -102,6 +104,7 @@ export default {
 .col { padding:0 12px }
 .col.num { width:80px }
 .col.title { flex:1 }
+.col.author { width:160px }
 .col.date { width:140px; text-align:right }
 .pagination { margin-top:12px; display:flex; gap:8px; align-items:center }
 .error { color: #c00 }
