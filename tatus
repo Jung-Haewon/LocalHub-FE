@@ -1,0 +1,44 @@
+[33m6bc8277[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m entire design updated2
+[33mb1c1b09[m modify : Add banner image to homepage
+[33m0327cba[m Improve promt
+[33m358ab44[m entire design improved
+[33mf50ad18[m Merge remote-tracking branch 'origin/Category_Detail'
+[33meb0930e[m[33m ([m[1;31morigin/Category_Detail[m[33m)[m Modify : Detail page UI/UX redesign
+[33mc025125[m Merge branch 'master' of https://github.com/Jung-Haewon/LocalHub-FE
+[33mb093142[m notice board updated
+[33m1c34886[m Merge branch 'polish_chat'
+[33mb40d8fd[m[33m ([m[1;31morigin/polish_chat[m[33m)[m Link location page
+[33m8617f6a[m feat(posts): show author column in posts list
+[33m48cc69b[m style: global design tokens and refine header/posts/form styles
+[33mf04532e[m modify : change back-end api endpoint
+[33m7e80aa6[m Improve intro message
+[33mb8c9226[m feat(posts): remove category UI and default category auto-fill; add toast & password modal
+[33m793ddbd[m feat: add toast + password modal; improve post form/detail flows; add lucide dependency
+[33m01aafa0[m map maker hotfix
+[33mf481b71[m Merge remote-tracking branch 'origin/polish_chat'
+[33m6de386e[m map's maker information added
+[33m53949b5[m Specify chatbot header colour
+[33m57dfe73[m Make the panel non-transparent
+[33m251c7c5[m Improve send button
+[33mceb3c91[m Show loading animation while waiting for reply
+[33mf241cbc[m Enlarge chat box
+[33m61cc9b5[m Disable sending while waiting for reply and auto scroll when reply arrives
+[33md20aa8d[m tmp
+[33m8e6601e[m main page map is removed
+[33me14062d[m Merge branch 'master' of https://github.com/Jung-Haewon/LocalHub-FE
+[33m98c442f[m tmp
+[33m1597562[m[33m ([m[1;31morigin/integrate_chatbot[m[33m)[m Add loading message to chatbot
+[33ma4a0c05[m Modify : Category detail page update
+[33m2d35e5f[m Integrate chatbot
+[33mf294f7d[m Deploy frontend: initial LocalHub FE scaffold + map integration
+[33m8261ef0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m modify : modify categories of home page
+[33m485a472[m add : 백엔드 API 연결(게시글 조회, 게시글 작성)
+[33me4b09bf[m notice board updated (views function, recommed system update)
+[33m7ef032f[m unnecessary files are deleted
+[33ma078508[m chore: remove venv and large unneeded files from repo
+[33m73e7b90[m chore: add .gitignore entries for venv, caches and docs
+[33m71687b1[m Merge branch 'FrontEndJH' into main
+[33m137819d[m chatbot UI added
+[33m05f7945[m notice board added
+[33m524f7f3[m vanilla webpage
+[33m248ba8e[m Initial commit

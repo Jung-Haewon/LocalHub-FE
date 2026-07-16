@@ -97,16 +97,16 @@ export default {
 </script>
 
 <style scoped>
-.controls { display:flex; gap:12px; align-items:center; margin-bottom:16px }
-.posts-list { padding-top:20px }
-.posts-table { border-top:1px solid var(--card-border); margin-top:24px }
-.posts-row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #f3f3f3 }
-.posts-row.header { font-weight:600; color:var(--color-muted) }
+.controls { display:flex; gap:12px; align-items:center; margin-bottom:18px }
+.posts-list { padding:24px; background:transparent }
+.posts-table { border-top:1px solid var(--card-border); margin-top:20px }
+.posts-row { display:flex; align-items:center; padding:18px 12px; border-bottom:1px solid #f3f3f3 }
+.posts-row.header { font-weight:700; color:var(--color-muted); padding:14px 12px }
 .col { padding:0 12px }
-.col.num { width:80px }
+.col.num { width:90px }
 .col.title { flex:1 }
-.col.author { width:160px }
-.col.date { width:140px; text-align:right }
-.pagination { margin-top:12px; display:flex; gap:8px; align-items:center }
+.col.author { width:180px }
+.col.date { width:160px; text-align:right }
+.pagination { margin-top:18px; display:flex; gap:12px; align-items:center }
 .error { color: #c00 }
 </style>
