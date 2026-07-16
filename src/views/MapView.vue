@@ -67,6 +67,10 @@ export default {
                   const position = new kakao.maps.LatLng(lat, lng)
                   const marker = new kakao.maps.Marker({ position })
                   const props = f.properties || {}
+                  const iwContent = `<div style="padding:6px 8px;max-width:220px"><strong>${escapeHtml(props.title||'')}</strong></div>`
+                  const infowindow = new kakao.maps.InfoWindow({ content: iwContent })
+                  kakao.maps.event.addListener(marker, 'mouseover', () => { infowindow.open(map, marker) })
+                  kakao.maps.event.addListener(marker, 'mouseout', () => { infowindow.close() })
                   kakao.maps.event.addListener(marker, 'click', () => {
                     const targetId = props.id || props.content_id
                     router.push({ name: 'LocationDetail', params: { id: targetId } })
@@ -101,6 +105,10 @@ export default {
                 }
                 const position = new kakao.maps.LatLng(lat, lng)
                 const marker = new kakao.maps.Marker({ position })
+                const iwContent = `<div style="padding:6px 8px;max-width:220px"><strong>${escapeHtml(item.title||'')}</strong></div>`
+                const infowindow = new kakao.maps.InfoWindow({ content: iwContent })
+                kakao.maps.event.addListener(marker, 'mouseover', () => { infowindow.open(map, marker) })
+                kakao.maps.event.addListener(marker, 'mouseout', () => { infowindow.close() })
                 kakao.maps.event.addListener(marker, 'click', () => {
                   const targetId = item.id || item.content_id
                   router.push({ name: 'LocationDetail', params: { id: targetId } })
@@ -212,6 +220,7 @@ export default {
                     onEachFeature: function (feature, layer) {
                       const p = feature.properties || {}
                       layer.bindPopup(`<b>${escapeHtml(p.title || p.name || '')}</b><br>${escapeHtml(p.addr1 || '')}`)
+                      layer.bindTooltip(`${escapeHtml(p.title || p.name || '')}`, { direction: 'top', offset: [0, -8] })
                       layer.on('click', () => {
                         const targetId = p.id || p.content_id
                         router.push({ name: 'LocationDetail', params: { id: targetId } })
