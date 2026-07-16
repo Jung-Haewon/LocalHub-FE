@@ -119,7 +119,7 @@ async function send() {
 .fab { width:56px; height:56px; border-radius:50%; background:var(--accent); color:var(--bg); border:none; box-shadow:0 8px 20px rgba(0,0,0,.3); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:20px; position: relative; left: -16px; transition: transform .18s ease; }
 .chatbot-widget.open .fab { transform: scale(1.05); }
 .panel { width:450px; height:650px; resize: both; background: white;; border-radius:10px; box-shadow:0 12px 40px rgba(0,0,0,.45); margin-right:12px; overflow:auto; display:flex; flex-direction:column; transform-origin:100% 100%; animation: fadeIn .12s ease; }
-.panel-header { padding:10px 12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); color:var(--text); font-weight:600 }
+.panel-header { padding:10px 12px; display:flex; background: #ffffff; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); color:var(--text); font-weight:600 }
 .messages { padding:12px; flex:1; overflow:auto }
 .msg { padding:8px 10px; margin-bottom:8px; border-radius:8px; font-size: 16px; max-width:86%; }
 .msg.user { background:#bcd3e0; color:var(--text); margin-left:auto }
