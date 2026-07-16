@@ -160,6 +160,7 @@ export default {
           const ls = document.createElement('script')
           ls.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
           ls.onload = () => {
+            console.log('Leaflet script loaded')
             // load markercluster CSS and JS
             if (!document.querySelector('link[data-leaflet-cluster]')) {
               const mcCss1 = document.createElement('link')
@@ -175,7 +176,7 @@ export default {
             }
             const mcs = document.createElement('script')
             mcs.src = 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js'
-            mcs.onload = initLeafletMap
+            mcs.onload = () => { console.log('Leaflet.markercluster loaded'); initLeafletMap() }
             mcs.onerror = () => { console.error('Leaflet markercluster load failed') }
             document.head.appendChild(mcs)
           }
@@ -211,8 +212,12 @@ export default {
                 const gres = await api.get('/locations/geojson', { params: { category: params.category } })
                 const geo = gres.data
                 if (geo && geo.type === 'FeatureCollection' && geo.features && geo.features.length > 0) {
-                  // use marker cluster group
-                  const group = window.L.markerClusterGroup()
+                      // use marker cluster group
+                        if (!window.L.markerClusterGroup) {
+                          console.warn('markerClusterGroup not available on L')
+                        }
+                        const group = window.L.markerClusterGroup({ disableClusteringAtZoom: 13, maxClusterRadius: 40 })
+                        console.log('Created marker cluster group', !!group)
                   window.L.geoJSON(geo, {
                     pointToLayer: function (feature, latlng) {
                       return window.L.marker(latlng)
@@ -243,7 +248,11 @@ export default {
               const items = res.data.items || []
               console.log('Leaflet loaded locations count:', items.length)
               if (items.length > 0) {
-                const group = window.L.markerClusterGroup()
+                if (!window.L.markerClusterGroup) {
+                  console.warn('markerClusterGroup not available on L')
+                }
+                const group = window.L.markerClusterGroup({ disableClusteringAtZoom: 13, maxClusterRadius: 40 })
+                console.log('Created marker cluster group (fallback)', !!group)
                 items.forEach(item => {
                   const lat = parseFloat(item.mapy)
                   const lng = parseFloat(item.mapx)
