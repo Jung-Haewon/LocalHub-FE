@@ -11,4 +11,4 @@ npm run dev
 
 Notes:
 - Kakao Maps JS key must be added in `src/views/MapView.vue` replacing `YOUR_KAKAO_JS_KEY`.
-- Backend API base is `http://localhost:8000/api` (see `src/services/api.js`).
+- Backend API base is `https://localhub-be-blwp.onrender.com/` (see `src/services/api.js`).
