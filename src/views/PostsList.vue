@@ -1,6 +1,6 @@
 <template>
   <div class="posts-list">
-    <h2>커뮤니티</h2>
+    <h2>게시판</h2>
     <div class="controls">
       <router-link to="/posts/new">글쓰기</router-link>
     </div>
@@ -97,8 +97,9 @@ export default {
 </script>
 
 <style scoped>
-.controls { display:flex; gap:12px; align-items:center; margin-bottom:12px }
-.posts-table { border-top:1px solid var(--card-border); margin-top:12px }
+.controls { display:flex; gap:12px; align-items:center; margin-bottom:16px }
+.posts-list { padding-top:20px }
+.posts-table { border-top:1px solid var(--card-border); margin-top:24px }
 .posts-row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #f3f3f3 }
 .posts-row.header { font-weight:600; color:var(--color-muted) }
 .col { padding:0 12px }

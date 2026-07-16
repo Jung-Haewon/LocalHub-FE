@@ -148,17 +148,17 @@ export default {
 :root {
   --font-title: 'Outfit', 'Pretendard', sans-serif;
   --font-body: 'Pretendard', sans-serif;
-  --bg-main: #f8fafc;
+  --bg-main: #fff7f2; /* warm background */
   --bg-card: #ffffff;
-  --primary: #4f46e5;
-  --primary-light: #e0e7ff;
-  --secondary: #10b981;
-  --text-main: #0f172a;
-  --text-dim: #64748b;
-  --border: #e2e8f0;
+  --primary: #ff6b3d; /* warm coral */
+  --primary-light: #ffe6dc;
+  --secondary: #f59e0b;
+  --text-main: #17212a;
+  --text-dim: #7a7f86;
+  --border: #efe6dd;
   --radius: 16px;
-  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 16px 36px -12px rgba(79, 70, 229, 0.08), 0 4px 12px -4px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 2px 8px rgba(23, 33, 42, 0.04);
+  --shadow-md: 0 12px 30px -10px rgba(255,107,61,0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
 }
 
 /* Page */
@@ -179,7 +179,8 @@ export default {
 .hero-overlay{
   position:absolute;
   inset:0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 100%);
+  /* warm subtle overlay to enhance sunset banner */
+  background: linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.28) 100%);
   pointer-events:none;
 }
 .hero-inner{
@@ -211,7 +212,8 @@ export default {
 .media-placeholder{ color:var(--text-dim) }
 .badge{ position:absolute; right:12px; bottom:12px; background:rgba(15,23,42,0.85); color:#fff; padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px }
 .card-body{ padding:16px }
-.card-title{ margin:0; font-family:var(--font-title); font-size:16px; color:var(--text-main) }
+.card-title{ margin:0; font-family:var(--font-title); font-size:16px; color:#000 }
+.label { color: #000; }
 
 /* Recent posts */
 .recent{ padding:28px 0 }

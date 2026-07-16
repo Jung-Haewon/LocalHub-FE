@@ -1,14 +1,15 @@
 :root{
-  --color-primary:#0b5ed7; /* main brand blue */
-  --color-accent:#2563eb; /* accent */
-  --color-muted:#6b7280;
-  --bg-soft:#f8fafc;
-  --card-border:#e6eef6;
+  /* warm sunset-inspired palette to match banner */
+  --color-primary:#ff6b3d; /* warm coral */
+  --color-accent:#ff8f66; /* lighter accent */
+  --color-muted:#7a7f86;
+  --bg-soft:#fff7f2; /* warm light background */
+  --card-border:#efe6dd;
   --radius:10px;
   --max-width:1200px;
   --gap:20px;
   --font-sans: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  --text-color: #0f1724;
+  --text-color: #17212a;
 }
 *{box-sizing:border-box}
 .html,body,#app{height:100%;margin:0;font-family:var(--font-sans);color:var(--text-color);background:#fff}
@@ -17,8 +18,8 @@ html,body,#app{font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased
 
 /* Links: remove default underline and use subtle bottom border on hover */
 a { color:var(--color-accent); text-decoration:none; border-bottom:1px solid transparent; transition:color .15s ease, border-color .15s ease }
-a:hover, a:focus { color:var(--color-primary); border-bottom-color: rgba(37,99,235,0.12); text-decoration:none }
-a:focus-visible { outline: 2px solid rgba(37,99,235,0.12); outline-offset: 2px }
+a:hover, a:focus { color:var(--color-primary); border-bottom-color: rgba(255,111,61,0.12); text-decoration:none }
+a:focus-visible { outline: 2px solid rgba(255,111,61,0.12); outline-offset: 2px }
 .container{max-width:var(--max-width);margin:0 auto;padding:0 24px}
 
 /* Header */
