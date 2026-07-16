@@ -1,24 +1,26 @@
 <template>
-  <div class="post-detail container" v-if="post">
-    <nav class="breadcrumb">홈 &gt; 게시판 &gt; 게시글 상세</nav>
+  <div class="post-detail" v-if="post">
+    <div class="page-container">
+      <nav class="breadcrumb">홈 &gt; 게시판 &gt; 게시글 상세</nav>
 
-    <div class="title-row">
-      <h1 class="post-title">{{ post.title }}</h1>
-      <div class="meta">
-        <span class="author">{{ post.author_nickname || '익명' }}</span>
-        <span class="dot">·</span>
-        <span class="date">{{ formattedDate }}</span>
+      <div class="title-row">
+        <h1 class="post-title">{{ post.title }}</h1>
+        <div class="meta">
+          <span class="author">{{ post.author_nickname || '익명' }}</span>
+          <span class="dot">·</span>
+          <span class="date">{{ formattedDate }}</span>
+        </div>
       </div>
-    </div>
 
-    <div class="content-box">
-      <div class="content" v-html="post.content"></div>
-    </div>
+      <div class="content-box">
+        <div class="content" v-html="post.content"></div>
+      </div>
 
-    <div class="actions">
-      <router-link class="btn" to="/posts">목록으로</router-link>
-      <router-link class="btn secondary" :to="`/posts/${post.id}/edit`">수정</router-link>
-      <button class="btn danger" @click="onDelete">삭제</button>
+      <div class="actions">
+        <router-link class="btn" to="/posts">목록으로</router-link>
+        <router-link class="btn secondary" :to="`/posts/${post.id}/edit`">수정</router-link>
+        <button class="btn danger" @click="onDelete">삭제</button>
+      </div>
     </div>
   </div>
 </template>
@@ -80,20 +82,69 @@ export default {
 </script>
 
 <style scoped>
-.breadcrumb { color: var(--color-muted); font-size:0.95rem; margin-bottom:14px }
-.title-row { display:flex; flex-direction:column; align-items:flex-start; gap:8px; width:calc(100vw - 120px); margin-left:50%; transform:translateX(-50%); box-sizing:border-box }
-.post-title { margin:0; font-size:2rem; color:var(--color-primary); font-weight:700 }
-.meta { color: var(--color-muted); font-size:0.9rem }
-.meta .dot { margin: 0 6px }
-.category { font-size:0.9rem; color:var(--color-secondary); margin-top:6px }
-.content-box { border:1px solid var(--card-border); padding:22px; border-radius:10px; min-height:360px; background:#fff; margin-top:14px; width:calc(100vw - 120px); max-width:none; margin-left:50%; transform:translateX(-50%); box-sizing:border-box; max-height:calc(100vh - 220px); overflow:auto }
-.content { line-height:1.9; color:#222; white-space:pre-wrap; word-break:break-word }
-.actions { margin-top:16px; display:flex; gap:10px; justify-content:flex-end; width:calc(100vw - 120px); margin-left:50%; transform:translateX(-50%); box-sizing:border-box }
+.post-detail { background: transparent; }
 
-@media (max-width: 1200px) {
-  .title-row, .content-box, .actions { width:100%; transform:none; margin-left:0 }
+/* 다른 페이지들과 통일된 컨테이너 패턴.
+   기존의 width:100vw 강제 breakout(margin-left:50%+translateX) 제거 -->
+   화면이 넓어져도 콘텐츠가 무한정 늘어나지 않음 */
+.page-container {
+  max-width: min(96vw, 1200px);
+  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 2rem) 1rem 3rem;
 }
-.btn { padding:8px 14px; border-radius:6px; background:#e6eefc; color:#0b5ed7; border:none; cursor:pointer; text-decoration:none; text-align:center }
-.btn.secondary { background:#f3f4f6; color:#222 }
-.btn.danger { background:#ffe9e9; color:#c1121f }
+
+.breadcrumb { color: #999; font-size: 0.85rem; margin-bottom: 1rem; }
+
+.title-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+.post-title { margin: 0; font-size: 1.6rem; color: #1a1a1a; font-weight: 700; }
+.meta { color: #888; font-size: 0.85rem; }
+.meta .dot { margin: 0 6px; }
+
+.content-box {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 1.5rem;
+  min-height: 280px;
+  background: #fff;
+}
+.content {
+  line-height: 1.8;
+  color: #222;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.95rem;
+}
+
+.actions {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #e6eefc;
+  color: #0b5ed7;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  font-size: 0.85rem;
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn.secondary { background: #f3f4f6; color: #222; }
+.btn.danger { background: #ffe9e9; color: #c1121f; }
+
+@media (max-width: 640px) {
+  .actions { flex-wrap: wrap; }
+  .btn { flex: 1; min-width: 90px; }
+}
 </style>
