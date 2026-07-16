@@ -1,19 +1,22 @@
+아래는 2번 방안(약간 지연 + RAF 반복)을 적용한 전체 `LocationDetail.vue` 코드입니다.
+
+```vue
 <template>
-  <div class="location-detail" v-if="item">
+  <div class="location-detail">
+    <div v-if="!item && loading" class="loading-overlay">로딩중...</div>
     <div class="detail-grid">
       <div class="left">
         <div class="photo-wrap">
-          <img v-if="item.first_image" :src="item.first_image" alt="img" @load="onImageLoad" />
+          <img v-if="item && item.first_image" :src="item.first_image" alt="img" @load="onImageLoad" />
           <div v-else class="no-photo">사진 없음</div>
         </div>
       </div>
 
       <div class="right">
-        <div class="large-title">{{ item.title }}</div>
-        <div v-if="item.addr1" class="detail-addr">상세주소: {{ item.addr1 }}</div>
+        <div class="large-title">{{ item ? item.title : '' }}</div>
+        <div v-if="item && item.addr1" class="detail-addr">상세주소: {{ item.addr1 }}</div>
 
-        <div id="detail-map" class="detail-map" v-if="hasCoords"></div>
-        <div v-else class="no-map-note">지도 좌표가 없습니다.</div>
+        <div id="detail-map" class="detail-map" v-show="hasCoords"></div>
 
         <div class="top-controls">
           <button class="btn" @click="goBack">뒤로가기</button>
@@ -58,7 +61,6 @@ export default {
           }
           mapInstance.setCenter(new window.kakao.maps.LatLng(lat, lng))
         } else if (mapLib === 'leaflet' && mapInstance && window.L) {
-          // Leaflet: recalc and keep current zoom
           try { mapInstance.invalidateSize() } catch (e) {}
           const z = (mapInstance.getZoom && typeof mapInstance.getZoom === 'function') ? mapInstance.getZoom() : 13
           mapInstance.setView([lat, lng], z)
@@ -76,12 +78,11 @@ export default {
 
     const fetchItem = async () => {
       loading.value = true
-      // 먼저 기존 맵 인스턴스 제거(화면 깨짐 방지)
       clearMap()
       try {
         const params = {}
         const allowed = ['category','q','lat','lon','radius','content_id']
-        allowed.forEach(k => { if (route.query[k]) params[k] = route.query[k] })
+        allowed.forEach(k => { if (route.query[k] !== undefined && route.query[k] !== null && route.query[k] !== '') params[k] = route.query[k] })
         const r = await api.get(`/locations/${props.id}`, { params })
         item.value = r.data || null
         prevId.value = (r.data && (r.data.prev_id ?? r.data.prevId)) || null
@@ -108,7 +109,7 @@ export default {
           const el = document.getElementById('detail-map')
           if (el) el.innerHTML = ''
         } else if (mapLib === 'leaflet' && mapInstance && window.L) {
-          mapInstance.remove()
+          try { mapInstance.remove() } catch (e) {}
         }
       } catch (e) { /* ignore */ }
       mapInstance = null
@@ -169,8 +170,25 @@ export default {
           window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance)
           const marker = window.L.marker([lat, lng]).addTo(mapInstance)
           marker.bindPopup(`<b>${escapeHtml(item.value.title || '')}</b><br>${escapeHtml(item.value.addr1||'')}`).openPopup()
+
+          // Option 2: delayed + RAF repeated resize to ensure Leaflet renders after route-change/layout changes
+          const doResizeAttempts = () => {
+            let tries = 0
+            const attempt = () => {
+              requestAnimationFrame(() => {
+                try {
+                  if (mapInstance && mapInstance.invalidateSize) mapInstance.invalidateSize()
+                  if (mapInstance && mapInstance.setView) mapInstance.setView([lat, lng], mapInstance.getZoom ? mapInstance.getZoom() : 13)
+                } catch (e) {}
+                tries++
+                if (tries < 4) setTimeout(attempt, 120)
+              })
+            }
+            setTimeout(attempt, 240)
+          }
+          doResizeAttempts()
+
           tryRelayout()
-          setTimeout(tryRelayout, 300)
         }
       } catch (e) {
         // cannot load a map; leave the map div empty
@@ -239,12 +257,14 @@ export default {
       await router.push({ name: 'LocationDetail', params: { id }, query: route.query })
     }
 
-    return { item, prevId, nextId, goBack, goToId, hasCoords, onImageLoad }
+    return { item, prevId, nextId, goBack, goToId, hasCoords, onImageLoad, loading }
   }
 }
 </script>
 
 <style scoped>
+.location-detail { position: relative; }
+.loading-overlay { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.8); z-index: 10; font-weight: 600; }
 .detail-grid { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }
 .left { flex: 1 1 320px; max-width: 480px; }
 .right { flex: 1 1 320px; min-width: 320px; }
@@ -253,9 +273,9 @@ export default {
 .large-title { font-size:1.25rem; font-weight:700; margin-top:0.5rem }
 .detail-addr { font-size:0.95rem; color:#666; margin-top:6px }
 .detail-map { width:100%; height:300px; margin-top:12px; border-radius:6px; overflow:hidden }
-.no-map-note { margin-top:12px; color:#999 }
 .top-controls { display:flex; justify-content:space-between; align-items:center; margin-top:12px }
 .nav-buttons { display:flex; gap:8px; }
 .btn { padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer }
 .btn:disabled { opacity:0.5; cursor:not-allowed }
 </style>
+```
