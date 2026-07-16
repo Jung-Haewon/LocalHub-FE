@@ -2,10 +2,7 @@
   <div class="post-form">
     <h2>{{ isEdit ? '게시글 수정' : '게시글 작성' }}</h2>
     <form @submit.prevent="onSubmit">
-      <div>
-        <label>카테고리</label>
-        <input v-model="form.category" required />
-      </div>
+      <!-- category is handled automatically -->
       <div>
         <label>제목</label>
         <input v-model="form.title" required />
@@ -89,6 +86,10 @@ export default {
 </script>
 
 <style scoped>
-form > div { margin-bottom:8px }
+.post-form { max-width:900px; margin:0 auto }
+form > div { margin-bottom:12px }
+label { display:block; margin-bottom:6px; font-weight:600 }
+textarea { min-height:220px }
+.actions { display:flex; gap:12px; justify-content:flex-end }
 button { margin-top:8px }
 </style>

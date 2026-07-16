@@ -10,7 +10,7 @@
 </template>
 
 <style scoped>
-.header { background:#fff; border-bottom:1px solid #eee }
-.container { display:flex; justify-content:space-between; align-items:center; padding:12px 16px }
+.header { background:transparent }
+.container { display:flex; justify-content:space-between; align-items:center; padding:8px 0 }
 nav a { margin-left:12px }
 </style>

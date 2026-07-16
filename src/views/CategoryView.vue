@@ -1,11 +1,9 @@
 <template>
   <div class="category-page">
-    <div class="category-header">
-      <div class="meta">
-        <div>
-          <h2>{{ title }}</h2>
-          <div class="meta-sub">총 {{ totalCount }}개</div>
-        </div>
+    <div class="category-header container">
+      <div>
+        <h2>{{ title }}</h2>
+        <div class="meta-sub">총 {{ totalCount }}개</div>
       </div>
       <div class="actions">
         <router-link :to="{ name: 'Map', query: { category: id } }" class="btn">지도에서 보기</router-link>

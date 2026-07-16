@@ -8,12 +8,18 @@
     <div v-if="loading">로딩중...</div>
     <div v-if="error" class="error">{{ error }}</div>
 
-    <ul v-if="!loading && items.length">
-      <li v-for="item in items" :key="item.id">
-        <router-link :to="`/posts/${item.id}`">{{ item.title }}</router-link>
-        <small>{{ item.author_nickname }} · {{ formatDate(item.created_at) }}</small>
-      </li>
-    </ul>
+    <div v-if="!loading && items.length" class="posts-table">
+      <div class="posts-row header">
+        <div class="col num">번호</div>
+        <div class="col title">제목</div>
+        <div class="col date">작성일</div>
+      </div>
+      <div v-for="(item, idx) in items" :key="item.id" class="posts-row">
+        <div class="col num">{{ total - ((page-1)*size) - idx }}</div>
+        <div class="col title"><router-link :to="`/posts/${item.id}`">{{ item.title }}</router-link></div>
+        <div class="col date">{{ formatDate(item.created_at) }}</div>
+      </div>
+    </div>
 
     <div class="pagination" v-if="total > size">
       <button :disabled="page<=1" @click="changePage(page-1)">이전</button>
@@ -83,15 +89,20 @@ export default {
       fetchPosts()
     })
 
-    return { items, categories, category, loading, error, page, size, total, changePage, formatDate }
+    return { items, categories, loading, error, page, size, total, changePage, formatDate }
   }
 }
 </script>
 
 <style scoped>
 .controls { display:flex; gap:12px; align-items:center; margin-bottom:12px }
-ul { list-style:none; padding:0 }
-li { padding:8px 0; border-bottom:1px solid #eee }
+.posts-table { border-top:1px solid var(--card-border); margin-top:12px }
+.posts-row { display:flex; align-items:center; padding:12px 0; border-bottom:1px solid #f3f3f3 }
+.posts-row.header { font-weight:600; color:var(--color-muted) }
+.col { padding:0 12px }
+.col.num { width:80px }
+.col.title { flex:1 }
+.col.date { width:140px; text-align:right }
 .pagination { margin-top:12px; display:flex; gap:8px; align-items:center }
 .error { color: #c00 }
 </style>
