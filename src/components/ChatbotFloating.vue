@@ -42,7 +42,7 @@ import { SendHorizontal } from 'lucide-vue-next'
 
 const isOpen = ref(false)
 const input = ref('')
-const messages = ref([{ from: 'bot', text: '안녕하세요 — 지역 정보를 도와드려요.' }])
+const messages = ref([{ from: 'bot', text: '안녕하세요. LocalHub 서울 관광 안내 챗봇 서울이입니다. 서울의 명소 문화시설 쇼핑 레포츠 숙박 여행코스 축제 공연 정보를 도와드립니다.' }])
 const loading = ref(false)
 const messagesContainer = ref(null)
 
