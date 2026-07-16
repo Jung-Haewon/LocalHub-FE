@@ -139,8 +139,8 @@ async function send() {
 .panel-header { padding:10px 12px; display:flex; background: #ffffff; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); color:var(--text); font-weight:600 }
 .messages { padding:12px; flex:1; overflow:auto }
 .msg { padding:8px 10px; margin-bottom:8px; border-radius:8px; font-size: 16px; max-width:86%; }
-.msg.user { background:#ffc9b8; color:var(--text); margin-left:auto }
-.msg.bot { background:#fcd696; color:var(--text) }
+.msg.user { background:#fde1d8; color:var(--text); margin-left:auto }
+.msg.bot { background:#fcecce; color:var(--text) }
 .composer { display:flex; gap:8px; padding:10px; border-top:1px solid var(--border); }
 .composer input { flex:1; padding:8px; border-radius:6px; border:1px solid var(--border); font-size: 16px; background:transparent; color:var(--text) }
 .composer button { padding:8px 12px; border-radius:6px; border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer }
