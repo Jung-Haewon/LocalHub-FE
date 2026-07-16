@@ -38,13 +38,18 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const isEdit = route.name === 'PostEdit'
-    const form = ref({ category: '', title: '', content: '', author_nickname: '', password: '' })
+    const DEFAULT_CATEGORY = 'community'
+    const form = ref({ category: DEFAULT_CATEGORY, title: '', content: '', author_nickname: '', password: '' })
 
     const load = async () => {
       if (isEdit) {
         const id = route.params.id
         const r = await api.get(`/posts/${id}`)
+        // keep server category but don't show UI
         Object.assign(form.value, r.data)
+      } else {
+        // ensure default category for new posts
+        form.value.category = DEFAULT_CATEGORY
       }
     }
 
@@ -61,10 +66,13 @@ export default {
       if (err) { showToast(err, 'error'); return }
       try {
         if (isEdit) {
-          await api.put(`/posts/${route.params.id}`, { title: form.value.title, content: form.value.content, password: form.value.password })
+          // include category when updating to avoid removal
+          await api.put(`/posts/${route.params.id}`, { title: form.value.title, content: form.value.content, password: form.value.password, category: form.value.category })
           showToast('게시글이 수정되었습니다.', 'success')
           router.push(`/posts/${route.params.id}`)
         } else {
+          // ensure category present
+          if (!form.value.category) form.value.category = DEFAULT_CATEGORY
           const r = await api.post('/posts', form.value)
           showToast('게시글이 작성되었습니다.', 'success')
           router.push(`/posts/${r.data.id}`)

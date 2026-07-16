@@ -2,10 +2,6 @@
   <div class="posts-list">
     <h2>커뮤니티</h2>
     <div class="controls">
-      <select v-model="category">
-        <option value="">전체</option>
-        <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-      </select>
       <router-link to="/posts/new">글쓰기</router-link>
     </div>
 
@@ -36,7 +32,6 @@ export default {
   setup () {
     const items = ref([])
     const categories = ref([])
-    const category = ref('')
 
     const loading = ref(false)
     const error = ref(null)
@@ -62,7 +57,6 @@ export default {
       error.value = null
       try {
         const params = { page: page.value, size: size.value }
-        if (category.value) params.category = category.value
         const r = await api.get('/posts', { params })
         items.value = r.data.items || []
         total.value = r.data.total || items.value.length
@@ -80,33 +74,13 @@ export default {
       return new Date(s).toLocaleString()
     }
 
-    const route = useRoute()
-    const router = useRouter()
-
     onMounted(async () => {
       await fetchCategories()
-      if (route.query.category) category.value = route.query.category
-      if (route.query.page) page.value = parseInt(route.query.page)
       await fetchPosts()
     })
 
-    watch([category, page, size], () => {
+    watch([page, size], () => {
       fetchPosts()
-    })
-
-    // when user changes category via select, update route query
-    watch(category, (val) => {
-      const q = { ...route.query }
-      if (val) q.category = val
-      else delete q.category
-      q.page = 1
-      router.replace({ name: 'Posts', query: q })
-      page.value = 1
-    })
-
-    watch(page, (p) => {
-      const q = { ...route.query, page: p }
-      router.replace({ name: 'Posts', query: q })
     })
 
     return { items, categories, category, loading, error, page, size, total, changePage, formatDate }
