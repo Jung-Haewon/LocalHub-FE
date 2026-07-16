@@ -1,14 +1,8 @@
 <template>
   <main class="home-view">
-    <header class="hero">
+    <header class="hero" :style="heroStyle">
+      <div class="hero-overlay"></div>
       <div class="hero-inner container">
-        <div class="hero-text">
-          <h1>지역 정보 공유 커뮤니티 <span class="brand">LocalHub</span></h1>
-          <p class="lead">서울의 지역 정보를 프리미엄하게 정리하여 제공합니다.</p>
-        </div>
-        <div class="hero-actions">
-          <router-link to="/posts" class="btn">커뮤니티 바로가기</router-link>
-        </div>
       </div>
     </header>
 
@@ -52,6 +46,7 @@
 <script>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import api from '../services/api'
+import banner from '../assets/banner.jpg'
 
 export default {
   name: 'HomeView',
@@ -137,7 +132,13 @@ export default {
       return `${yy}-${mm}-${dd}`
     }
 
-    return { categoriesPreview, recentPosts, formatDate }
+    const heroStyle = {
+      backgroundImage: `url(${banner})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center center'
+    }
+
+    return { categoriesPreview, recentPosts, formatDate, heroStyle }
   }
 }
 </script>
@@ -165,12 +166,32 @@ export default {
 .container{max-width:1200px;margin:0 auto;padding:0 24px}
 
 /* Hero / Banner */
-.hero{ background:var(--bg-main); padding:48px 0 }
-.hero-inner{ display:flex; align-items:center; justify-content:space-between; gap:20px }
-.hero-text h1{ font-family:var(--font-title); color:var(--text-main); font-size:32px; margin:0; font-weight:700 }
-.hero-text .brand{ color:var(--primary) }
-.lead{ margin-top:8px; color:var(--text-dim); font-size:15px }
-.hero-actions{ display:flex; gap:12px }
+.hero{
+  position:relative;
+  height:320px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:18px;
+  border-radius:12px;
+  overflow:hidden;
+}
+.hero-overlay{
+  position:absolute;
+  inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 100%);
+  pointer-events:none;
+}
+.hero-inner{
+  position:relative;
+  z-index:2;
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding:24px;
+}
 
 /* Buttons */
 .btn{ background:var(--primary); color:#fff; padding:12px 16px; border-radius:var(--radius); font-weight:700; box-shadow:var(--shadow-sm); transition:transform .15s ease, box-shadow .15s ease, background .15s ease }
@@ -203,6 +224,6 @@ export default {
 
 /* Responsive */
 @media (max-width: 1000px){ .cards-grid{ grid-template-columns:repeat(3,1fr) } .hero-inner{ flex-direction:column; align-items:flex-start } }
-@media (max-width: 720px){ .cards-grid{ grid-template-columns:repeat(2,1fr) } .container{padding:0 14px} .hero-text h1{font-size:22px} }
+@media (max-width: 720px){ .cards-grid{ grid-template-columns:repeat(2,1fr) } .container{padding:0 14px} .hero{ height:220px } .hero-inner{ justify-content:center } }
 
 </style>
